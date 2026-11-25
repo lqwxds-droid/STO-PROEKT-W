@@ -43,18 +43,6 @@ ASP.NET Core 10 приложение автосервиса на MVC и Razor Pa
 2. Установите приложение на локальный компьютер
 3. После установки pgAdmin4 откроется в браузере на адресе `http://localhost:80` или `http://localhost:5050`
 
-##### Способ 2: Docker (рекомендуется)
-
-Если у вас установлен Docker, запустите pgAdmin4 командой:
-```bash
-docker run -p 5050:80 ^
-  -e PGADMIN_DEFAULT_EMAIL=admin@example.com ^
-  -e PGADMIN_DEFAULT_PASSWORD=admin ^
-  dpage/pgadmin4
-```
-
-Откройте в браузере `http://localhost:5050` и войдите с логином `admin@example.com` и паролем `admin`.
-
 ##### Подключение к PostgreSQL в pgAdmin4
 
 1. Откройте pgAdmin4 в браузере
