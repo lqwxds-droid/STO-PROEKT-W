@@ -1,0 +1,333 @@
+@model Green.Models.ServiceRequest
+
+@{
+	ViewData["Title"] = $"Заказ #{Model.Id} - {Model.Vehicle?.Make} {Model.Vehicle?.Model}";
+	var allWork = new List<(string type, object item, bool isCompleted, string title, decimal price, DateTime? date)>();
+	foreach (var service in Model.Services ?? new List<Service>())
+	{
+		allWork.Add(("service", service, service.IsCompleted, service.Name, service.Price, null));
+	}
+	foreach (var task in Model.Tasks)
+	{
+		allWork.Add(("task", task, task.IsCompleted, task.Title, task.Cost, task.PlannedDate));
+	}
+	var completedWork = (Model.Services?.Count(service => service.IsCompleted) ?? 0)
+		+ Model.Tasks.Count(task => task.IsApprovedByClient == true && task.IsCompleted);
+	var totalWork = (Model.Services?.Count ?? 0) + Model.Tasks.Count(task => task.IsApprovedByClient == true);
+	var progressPercent = totalWork > 0 ? (completedWork * 100) / totalWork : 0;
+}
+
+<script>
+	window.currentOrderStatus = @((int)Model.Status);
+</script>
+
+<div class="container-fluid p-4 employee-order-page">
+	<!-- HEADER -->
+	<div class="row mb-4">
+		<div class="col-12">
+			<div class="d-flex justify-content-between align-items-start">
+				<div>
+					<h2 class="mb-2">Заказ #@Model.Id</h2>
+					<p class="text-muted mb-1">
+						<strong>Клиент:</strong> @Model.Client?.FullName
+					</p>
+					<p class="text-muted">
+						<strong>Авто:</strong> @Model.Vehicle?.Make @Model.Vehicle?.Model (@Model.Vehicle?.LicensePlate)
+					</p>
+					<div class="client-contact-card mt-3">
+						<span class="client-contact-label">Телефон клиента</span>
+						@if (!string.IsNullOrWhiteSpace(Model.Client?.PhoneNumber))
+						{
+							<a class="client-contact-phone" href="tel:@Model.Client.PhoneNumber"><i class="bi bi-telephone-fill"></i> @Model.Client.PhoneNumber</a>
+						}
+						else if (!string.IsNullOrWhiteSpace(Model.Client?.Email))
+						{
+							<span class="client-contact-empty">Номер не указан</span>
+							<a class="client-contact-email" href="mailto:@Model.Client.Email">@Model.Client.Email</a>
+						}
+						else
+						{
+							<span class="client-contact-empty">Номер не указан</span>
+						}
+					</div>
+				</div>
+
+				<!-- СТАТУС ЗАКАЗА - БОЛЬШАЯ КНОПКА -->
+				<div class="text-end status-update-panel">
+					<form asp-controller="Employee" asp-action="UpdateOrder" method="post" class="d-inline">
+						@Html.AntiForgeryToken()
+						<input type="hidden" name="id" value="@Model.Id" />
+
+						<div class="mb-2">
+							<label class="form-label small text-muted">Изменить статус заказа</label>
+						</div>
+
+						<div class="d-flex gap-2 status-update-controls">
+							<select name="status" class="form-select form-select-lg fw-bold status-selector">
+								<option value="1">🔧 В работе</option>
+								<option value="2">✅ Выполнен</option>
+							</select>
+							<button type="submit" class="btn btn-success">Обновить статус</button>
+						</div>
+						<small class="text-muted d-block mt-2">После сохранения статус отобразится в списке заказов и в кабинете клиента.</small>
+						<small class="text-muted d-block mt-2">После сохранения статус отобразится в списке заказов и в кабинете клиента.</small>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<hr class="my-4">
+
+	<!-- ПРОГРЕСС БАР -->
+	<div class="row mb-4">
+		<div class="col-12">
+			<div class="d-flex justify-content-between align-items-center mb-2">
+				<h5 class="mb-0">Этапы работ</h5>
+				<span class="badge bg-info">@completedWork/@totalWork выполнено</span>
+			</div>
+			<div class="progress order-progress">
+				<div class="progress-bar bg-success" role="progressbar" style="width: @progressPercent%" aria-valuenow="@completedWork" aria-valuemin="0" aria-valuemax="@totalWork">
+					<span class="fw-bold text-white">@progressPercent%</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<!-- ЛЕВАЯ КОЛОНКА: ЭТАПЫ (ОСНОВНОЕ) -->
+		<div class="col-lg-8 mb-4">
+			<!-- СПИСОК ЭТАПОВ -->
+			<div class="card shadow-sm mb-4">
+				<div class="card-header bg-dark text-white">
+					<h5 class="mb-0">📋 Утвержденные услуги и дополнительные работы</h5>
+				</div>
+				<div class="card-body p-3">
+					@if (allWork.Count == 0)
+					{
+						<div class="alert alert-info mb-0">
+							Клиент записался на диагностику. Добавьте работы после осмотра.
+						</div>
+					}
+					else
+					{
+						<div class="list-group list-group-flush">
+							@foreach (var work in allWork)
+							{
+								var service = work.type == "service" ? (Service)work.item : null;
+								var task = work.type == "task" ? (ServiceTask)work.item : null;
+
+								<div class="list-group-item px-0 py-3 border-0 border-bottom d-flex justify-content-between align-items-center">
+									<div class="flex-grow-1">
+										@if (service != null)
+										{
+											<!-- Утвержденная услуга -->
+											<form asp-controller="Employee" asp-action="ToggleService" method="post" class="d-inline">
+												@Html.AntiForgeryToken()
+												<input type="hidden" name="serviceId" value="@service.Id" />
+												<input type="hidden" name="isCompleted" value="false" class="hidden-isCompleted" />
+												<button type="button" class="btn btn-lg task-toggle-btn @(work.isCompleted ? "btn-success" : "btn-outline-success")">
+													<i class="bi @(work.isCompleted ? "bi-check-circle-fill" : "bi-circle")"></i>
+													@(work.isCompleted ? "Выполнено" : "Отметить выполненным")
+												</button>
+											</form>
+											<div class="ms-3 d-inline-block">
+												<h6 class="mb-1 @(work.isCompleted ? "text-muted text-decoration-line-through" : "")">@work.title</h6>
+												<small class="text-muted">💵 @(work.price <= 0 ? "Цена после осмотра" : $"{work.price:N0} ₽") · 📌 Услуга (клиент выбрал)</small>
+											</div>
+										}
+										else if (task != null)
+										{
+							<div class="d-flex align-items-start gap-3 w-100">
+								@if (task.IsApprovedByClient == true)
+								{
+									<form asp-action="ToggleTask" method="post" class="d-inline">
+										@Html.AntiForgeryToken()
+										<input type="hidden" name="taskId" value="@task.Id" />
+										<input type="hidden" name="isCompleted" value="false" class="hidden-isCompleted" />
+										<button type="button" class="btn btn-lg task-toggle-btn @(work.isCompleted ? "btn-success" : "btn-outline-success")" aria-label="@(work.isCompleted ? "Отметить работу невыполненной" : "Отметить работу выполненной")">
+													<i class="bi @(work.isCompleted ? "bi-check-circle-fill" : "bi-circle")"></i>
+													@(work.isCompleted ? "Выполнено" : "Отметить выполненным")
+										</button>
+									</form>
+								}
+								else
+								{
+									<span class="task-approval-indicator @(task.IsApprovedByClient == false ? "task-rejected" : "task-pending")" title="Работу можно отметить после согласия клиента">
+									<i class="bi @(task.IsApprovedByClient == false ? "bi-x-circle" : "bi-hourglass-split")"></i>
+									</span>
+								}
+								<div class="flex-grow-1 min-w-0">
+												<h6 class="mb-1 @(work.isCompleted ? "text-muted text-decoration-line-through" : "")">@work.title</h6>
+											<small class="text-muted">
+												💰 @work.price.ToString("N0") ₽
+												· 📅 @(work.date?.ToLocalTime().ToString("dd.MM.yyyy") ?? "без даты")
+												· @(task.IsApprovedByClient == true ? "Согласовано клиентом" : task.IsApprovedByClient == false ? "Отклонено клиентом" : "Ожидает согласования клиента")
+												</small>
+								@if (task.IsApprovedByClient != true)
+								{
+								<details class="mt-2">
+													<summary class="small text-success task-edit-summary">Редактировать работу</summary>
+												<form asp-controller="Employee" asp-action="UpdateTask" method="post" class="row g-2 mt-1">
+														@Html.AntiForgeryToken()
+														<input type="hidden" name="taskId" value="@task.Id" />
+														<div class="col-12"><input name="title" value="@work.title" class="form-control form-control-sm" required /></div>
+														<div class="col-md-5"><input name="cost" value="@work.price" type="number" min="0" step="0.01" class="form-control form-control-sm" required /></div>
+														<div class="col-md-7"><input name="plannedDate" value="@(work.date?.ToLocalTime().ToString("yyyy-MM-dd"))" type="date" class="form-control form-control-sm" /></div>
+													<div class="col-12"><button class="btn btn-outline-success btn-sm" type="submit">Сохранить изменения</button></div>
+												</form>
+												@if (task.IsApprovedByClient == false)
+												{
+													<form asp-controller="Employee" asp-action="RemoveRejectedTask" method="post" class="mt-2" onsubmit="return confirm('Удалить отклонённую клиентом работу из заказ-наряда?');">
+														@Html.AntiForgeryToken()
+														<input type="hidden" name="taskId" value="@task.Id" />
+														<button type="submit" class="btn btn-outline-danger btn-sm">Удалить отклонённую работу</button>
+													</form>
+												}
+												</details>
+											}
+											</div>
+											</div>
+										}
+									</div>
+								</div>
+							}
+						</div>
+					}
+				</div>
+			</div>
+
+			<!-- ФОРМА ДОБАВЛЕНИЯ ЭТАПА -->
+			@if (Model.Status is Green.Models.RequestStatus.Planned or Green.Models.RequestStatus.InProgress)
+			{
+			<div class="card shadow-sm">
+				<div class="card-header bg-primary text-white">
+										<h5 class="mb-0">Предложить дополнительную работу</h5>
+				</div>
+				<div class="card-body">
+								<p class="text-muted small">Дополнительная работа появится в заказе после согласования клиентом.</p>
+					<form asp-controller="Employee" asp-action="AddTask" method="post">
+						@Html.AntiForgeryToken()
+						<input type="hidden" name="requestId" value="@Model.Id" />
+
+						<div class="row g-3">
+							<div class="col-12 col-md-6">
+								<label class="form-label">Название работы</label>
+								<input type="text" name="title" class="form-control form-control-lg" 
+									placeholder="Например: Замена масла" required />
+							</div>
+
+							<div class="col-12 col-md-3">
+								<label class="form-label">Цена (₽)</label>
+								<input type="number" name="cost" class="form-control form-control-lg" 
+									placeholder="0.00" min="0" step="0.01" required />
+							</div>
+
+							<div class="col-12 col-md-3">
+								<label class="form-label">Дата</label>
+								<input type="date" name="plannedDate" class="form-control form-control-lg" 
+									min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+							</div>
+
+							<div class="col-12">
+								<button type="submit" class="btn btn-primary btn-lg w-100">
+									➕ Добавить этап
+								</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+			}
+		</div>
+
+		<!-- ПРАВАЯ КОЛОНКА: ПАРАМЕТРЫ ЗАКАЗА -->
+		<div class="col-lg-4">
+			<div class="card shadow-sm mb-4">
+				<div class="card-header bg-success text-white">
+					<h5 class="mb-0">⚙️ Параметры</h5>
+				</div>
+				<div class="card-body">
+					@if (Model.Status is Green.Models.RequestStatus.Planned or Green.Models.RequestStatus.InProgress)
+					{
+					<form asp-controller="Employee" asp-action="UpdateOrderDetails" method="post">
+						@Html.AntiForgeryToken()
+						<input type="hidden" name="id" value="@Model.Id" />
+
+						<div class="mb-4">
+							<label class="form-label fw-bold">Стоимость заказ-наряда</label>
+							<div class="form-control form-control-lg">@Model.TotalCost.ToString("N0") ₽</div>
+							<small class="text-muted d-block mt-2">Рассчитывается автоматически по услугам и добавленным работам.</small>
+						</div>
+
+						<div class="mb-4">
+							<label class="form-label fw-bold">Ориентировочное время</label>
+							<input type="text" name="estimatedTime" class="form-control form-control-lg" 
+								value="@Model.EstimatedTime" placeholder="Например: 2 часа" />
+						</div>
+
+						<div class="mb-4">
+							<label class="form-label fw-bold">Комментарий для клиента</label>
+							<textarea name="masterComment" class="form-control" rows="5" 
+								placeholder="Что важно знать клиенту о работах...">@Model.MasterComment</textarea>
+						</div>
+
+						<button type="submit" class="btn btn-success btn-lg w-100">
+							💾 Сохранить
+						</button>
+					</form>
+					}
+				</div>
+			</div>
+
+			<!-- ИНФОРМАЦИЯ О ЗАКАЗЕ -->
+			<div class="card shadow-sm">
+				<div class="card-header bg-info text-white">
+					<h5 class="mb-0">ℹ️ Информация</h5>
+				</div>
+				<div class="card-body small">
+					<div class="mb-3">
+						<span class="text-muted">Дата создания:</span>
+						<br />
+						<strong>@Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</strong>
+					</div>
+					<div class="mb-3">
+						<span class="text-muted">Назначено сотруднику:</span>
+						<br />
+						<strong>@(Model.AssignedEmployee == null ? "Не назначено" : string.IsNullOrWhiteSpace(Model.AssignedEmployee.FullName) ? Model.AssignedEmployee.Email ?? Model.AssignedEmployee.UserName : Model.AssignedEmployee.FullName)</strong>
+					</div>
+					<div>
+						<span class="text-muted">ID заказа:</span>
+						<br />
+						<strong>#@Model.Id</strong>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+document.querySelectorAll('.task-toggle-btn').forEach(btn => {
+	btn.addEventListener('click', function (e) {
+		e.preventDefault();
+		const form = this.closest('form');
+		if (form) {
+			const isCurrentlyCompleted = this.classList.contains('btn-success');
+			const hiddenField = form.querySelector('.hidden-isCompleted');
+			if (hiddenField) {
+				// Если сейчас отмечено, то при клике делаем неотмеченным (false)
+				// Если не отмечено, то при клике делаем отмеченным (true)
+				hiddenField.value = isCurrentlyCompleted ? 'false' : 'true';
+			}
+			form.submit();
+		}
+	});
+});
+
+// Установить правильное значение при загрузке страницы
+const statusSelector = document.querySelector('.status-selector');
+if (statusSelector && ['1', '2'].includes('@((int)Model.Status)')) {
+	statusSelector.value = '@((int)Model.Status)';
+}
+</script>

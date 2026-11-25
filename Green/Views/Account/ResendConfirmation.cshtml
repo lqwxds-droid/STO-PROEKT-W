@@ -1,0 +1,25 @@
+@{
+	ViewData["Title"] = "Выслать подтверждение Email";
+	Layout = "_AuthLayout";
+}
+
+<div class="auth-wrap d-flex justify-content-center align-items-center py-5">
+	<div class="auth-card auth-card-compact shadow-lg rounded overflow-hidden">
+		<div class="p-4 bg-dark text-light">
+			<h3 class="text-center mb-1 text-success fw-bold">Выслать подтверждение Email</h3>
+			<p class="text-center text-muted small mb-4">Если вы не получили письмо с подтверждением — введите Email и мы пришлём его повторно.</p>
+
+							<form asp-action="ResendConfirmation" method="post">
+								<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+								<div class="mb-3">
+									<label class="form-label small text-muted">Email</label>
+									<input name="email" class="form-control bg-transparent text-light border-secondary" />
+								</div>
+								<div class="d-flex justify-content-between">
+									<a asp-action="Login" class="btn btn-outline-secondary">Назад</a>
+									<button type="submit" class="btn btn-success">Выслать</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>

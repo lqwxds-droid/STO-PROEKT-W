@@ -1,0 +1,282 @@
+@model Green.Models.Vehicle
+@{
+	ViewData["Title"] = "Добавление автомобиля";
+}
+
+<div class="page-heading"><div><span class="eyebrow">ЛИЧНЫЙ КАБИНЕТ / ГАРАЖ</span><h1>Добавление автомобиля</h1><p>Укажите данные автомобиля для быстрой записи и истории обслуживания.</p></div></div>
+<div class="row justify-content-center">
+	<div class="col-md-8 col-lg-6">
+		<div class="card bg-dark text-light border-secondary shadow-lg">
+			<div class="card-header border-secondary py-3 d-flex align-items-center justify-content-between">
+				<h4 class="mb-0 text-success fw-bold">Данные автомобиля</h4>
+				<a asp-controller="Account" asp-action="Profile" class="btn btn-outline-secondary btn-sm">← Назад в профиль</a>
+			</div>
+			<div class="card-body p-4">
+
+				@if (!ViewData.ModelState.IsValid)
+				{
+					<div class="validation-summary" asp-validation-summary="All" role="alert"></div>
+				}
+
+				<!-- Событие onsubmit гарантирует сборку номера как по клику, так и по клавише Enter -->
+				<form asp-controller="Client" asp-action="AddVehicle" method="post" onsubmit="combineLicensePlate()">
+					@Html.AntiForgeryToken()
+
+					<!-- Выбор марки -->
+					<div class="mb-3">
+						<label class="form-label fw-bold text-muted small">Марка *</label>
+						<select id="brandSelect" asp-for="Make" class="form-select bg-dark text-light border-secondary" required onchange="updateModels()">
+							<option value="">-- Выберите марку --</option>
+							<option value="BMW">BMW</option>
+							<option value="Audi">Audi</option>
+							<option value="Mercedes-Benz">Mercedes-Benz</option>
+							<option value="Toyota">Toyota</option>
+							<option value="Volkswagen">Volkswagen</option>
+							<option value="Hyundai">Hyundai</option>
+							<option value="KIA">KIA</option>
+							<option value="LADA">LADA (ВАЗ)</option>
+							<option value="Nissan">Nissan</option>
+							<option value="Ford">Ford</option>
+						</select>
+						<span asp-validation-for="Make" class="text-danger small"></span>
+					</div>
+
+					<!-- Выбор модели -->
+					<div class="mb-3">
+						<label class="form-label fw-bold text-muted small">Модель *</label>
+						<select id="modelSelect" asp-for="Model" class="form-select bg-dark text-light border-secondary" required>
+							<option value="">-- Сначала выберите марку --</option>
+						</select>
+						<span asp-validation-for="Model" class="text-danger small"></span>
+					</div>
+
+					<!-- Гос. номер и Выбор Региона РФ -->
+					<div class="row mb-3">
+						<div class="col-md-7">
+							<label class="form-label fw-bold text-muted small">Гос. номер (Буквы и цифры) *</label>
+							<input type="text" id="licenseNumber" class="form-control bg-dark text-light border-secondary text-uppercase" placeholder="А777АА" maxlength="6" required>
+						</div>
+						<div class="col-md-5">
+							<label class="form-label fw-bold text-muted small">Регион РФ *</label>
+							<select id="regionSelect" class="form-select bg-dark text-light border-secondary" required>
+								<option value="">-- Выберите регион --</option>
+								<option value="01">01 — Республика Адыгея</option>
+								<option value="02">02 — Республика Башкортостан</option>
+								<option value="03">03 — Республика Бурятия</option>
+								<option value="04">04 — Республика Алтай</option>
+								<option value="05">05 — Республика Дагестан</option>
+								<option value="06">06 — Республика Ингушетия</option>
+								<option value="07">07 — Кабардино-Балкарская Республика</option>
+								<option value="08">08 — Республика Калмыкия</option>
+								<option value="09">09 — Карачаево-Черкесская Республика</option>
+								<option value="10">10 — Республика Карелия</option>
+								<option value="11">11 — Республика Коми</option>
+								<option value="12">12 — Республика Марий Эл</option>
+								<option value="13">13 — Республика Мордовия</option>
+								<option value="14">14 — Республика Саха (Якутия)</option>
+								<option value="15">15 — Республика Северная Осетия — Алания</option>
+								<option value="16">16 — Республика Татарстан</option>
+								<option value="17">17 — Республика Тыва</option>
+								<option value="18">18 — Удмуртская Республика</option>
+								<option value="19">19 — Республика Хакасия</option>
+								<option value="20">20 — Чеченская Республика</option>
+								<option value="21">21 — Чувашская Республика</option>
+								<option value="22">22 — Алтайский край</option>
+								<option value="23">23 — Краснодарский край</option>
+								<option value="24">24 — Красноярский край</option>
+								<option value="25">25 — Приморский край</option>
+								<option value="26">26 — Ставропольский край</option>
+								<option value="27">27 — Хабаровский край</option>
+								<option value="28">28 — Амурская область</option>
+								<option value="29">29 — Архангельская область</option>
+								<option value="30">30 — Астраханская область</option>
+								<option value="31">31 — Белгородская область</option>
+								<option value="32">32 — Брянская область</option>
+								<option value="33">33 — Владимирская область</option>
+								<option value="34">34 — Волгоградская область</option>
+								<option value="35">35 — Вологодская область</option>
+								<option value="36">36 — Воронежская область</option>
+								<option value="37">37 — Ивановская область</option>
+								<option value="38">38 — Иркутская область</option>
+								<option value="39">39 — Калининградская область</option>
+								<option value="40">40 — Калужская область</option>
+								<option value="41">41 — Камчатский край</option>
+								<option value="42">42 — Кемеровская область</option>
+								<option value="43">43 — Кировская область</option>
+								<option value="44">44 — Костромская область</option>
+								<option value="45">45 — Курганская область</option>
+								<option value="46">46 — Курская область</option>
+								<option value="47">47 — Ленинградская область</option>
+								<option value="48">48 — Липецкая область</option>
+								<option value="49">49 — Магаданская область</option>
+								<option value="50">50 — Московская область</option>
+								<option value="51">51 — Мурманская область</option>
+								<option value="52">52 — Нижегородская область</option>
+								<option value="53">53 — Новгородская область</option>
+								<option value="54">54 — Новосибирская область</option>
+								<option value="55">55 — Омская область</option>
+								<option value="56">56 — Оренбургская область</option>
+								<option value="57">57 — Орловская область</option>
+								<option value="58">58 — Пензенская область</option>
+								<option value="59">59 — Пермский край</option>
+								<option value="60">60 — Псковская область</option>
+								<option value="61">61 — Ростовская область</option>
+								<option value="62">62 — Рязанская область</option>
+								<option value="63">63 — Самарская область</option>
+								<option value="64">64 — Саратовская область</option>
+								<option value="65">65 — Сахалинская область</option>
+								<option value="66">66 — Свердловская область</option>
+								<option value="67">67 — Смоленская область</option>
+								<option value="68">68 — Тамбовская область</option>
+								<option value="69">69 — Тверская область</option>
+								<option value="70">70 — Томская область</option>
+								<option value="71">71 — Тульская область</option>
+								<option value="72">72 — Тюменская область</option>
+								<option value="73">73 — Ульяновская область</option>
+								<option value="74">74 — Челябинская область</option>
+								<option value="75">75 — Забайкальский край</option>
+								<option value="76">76 — Ярославская область</option>
+								<option value="77">77 — Москва</option>
+								<option value="78">78 — Санкт-Петербург</option>
+								<option value="79">79 — Еврейская автономная область</option>
+								<option value="80">80 — Донецкая Народная Республика</option>
+								<option value="81">81 — Луганская Народная Республика</option>
+								<option value="82">82 — Республика Крым</option>
+								<option value="83">83 — Ненецкий автономный округ</option>
+								<option value="84">84 — Херсонская область</option>
+								<option value="85">85 — Запорожская область</option>
+								<option value="86">86 — Ханты-Мансийский автономный округ — Югра</option>
+								<option value="87">87 — Чукотский автономный округ</option>
+								<option value="88">88 — Красноярский край (доп.)</option>
+								<option value="89">89 — Ямало-Ненецкий автономный округ</option>
+								<option value="90">90 — Московская область (доп.)</option>
+								<option value="91">91 — Калининградская область (доп.)</option>
+								<option value="92">92 — Севастополь</option>
+								<option value="93">93 — Краснодарский край (доп.)</option>
+								<option value="94">94 — Байконур и территории за пределами РФ</option>
+								<option value="95">95 — Чеченская Республика (доп.)</option>
+								<option value="96">96 — Свердловская область (доп.)</option>
+								<option value="97">97 — Москва (доп.)</option>
+								<option value="98">98 — Санкт-Петербург (доп.)</option>
+								<option value="99">99 — Москва (доп.)</option>
+								<option value="102">102 — Республика Башкортостан (доп.)</option>
+								<option value="113">113 — Республика Мордовия (доп.)</option>
+								<option value="116">116 — Республика Татарстан (доп.)</option>
+								<option value="121">121 — Республика Марий Эл (доп.)</option>
+								<option value="123">123 — Краснодарский край (доп.)</option>
+								<option value="124">124 — Красноярский край (доп.)</option>
+								<option value="125">125 — Приморский край (доп.)</option>
+								<option value="126">126 — Ставропольский край (доп.)</option>
+								<option value="134">134 — Волгоградская область (доп.)</option>
+								<option value="136">136 — Воронежская область (доп.)</option>
+								<option value="138">138 — Иркутская область (доп.)</option>
+								<option value="142">142 — Кемеровская область (доп.)</option>
+								<option value="147">147 — Кировская область (доп.)</option>
+								<option value="150">150 — Московская область (доп.)</option>
+								<option value="152">152 — Нижегородская область (доп.)</option>
+								<option value="154">154 — Новосибирская область (доп.)</option>
+								<option value="156">156 — Оренбургская область (доп.)</option>
+								<option value="159">159 — Пермский край (доп.)</option>
+								<option value="161">161 — Ростовская область (доп.)</option>
+								<option value="163">163 — Самарская область (доп.)</option>
+								<option value="164">164 — Саратовская область (доп.)</option>
+								<option value="173">173 — Ульяновская область (доп.)</option>
+								<option value="174">174 — Челябинская область (доп.)</option>
+								<option value="176">176 — Свердловская область (доп.)</option>
+								<option value="177">177 — Москва (доп.)</option>
+								<option value="178">178 — Санкт-Петербург (доп.)</option>
+								<option value="186">186 — Ханты-Мансийский АО (доп.)</option>
+								<option value="196">196 — Свердловская область (доп.)</option>
+								<option value="197">197 — Санкт-Петербург (доп.)</option>
+								<option value="199">199 — Москва (доп.)</option>
+								<option value="750">750 — Московская область (доп.)</option>
+								<option value="761">761 — Ростовская область (доп.)</option>
+								<option value="763">763 — Самарская область (доп.)</option>
+								<option value="774">774 — Москва (доп.)</option>
+								<option value="777">777 — Москва (доп.)</option>
+								<option value="790">790 — Московская область (доп.)</option>
+								<option value="797">797 — Москва (доп.)</option>
+								<option value="799">799 — Москва (доп.)</option>
+								<option value="977">977 — Москва (доп.)</option>
+								<option value="978">978 — Республика Крым (доп.)</option>
+								<option value="999">999 — Москва (доп.)</option>
+							</select>
+						</div>
+					</div>
+
+					<!-- Итоговый составной гос. номер для отправки в БД -->
+					<input type="hidden" asp-for="LicensePlate" id="fullLicensePlate" />
+
+					<div class="row mb-3">
+						<div class="col-md-6">
+							<label class="form-label fw-bold text-muted small">Год выпуска *</label>
+							<input asp-for="Year" type="number" class="form-control bg-dark text-light border-secondary" value="2026" min="1990" max="2026" required />
+							<span asp-validation-for="Year" class="text-danger small"></span>
+						</div>
+						<div class="col-md-6">
+							<label class="form-label fw-bold text-muted small">VIN номер</label>
+							<input asp-for="VIN" type="text" class="form-control bg-dark text-light border-secondary text-uppercase" placeholder="17 символов" maxlength="17" />
+							<span asp-validation-for="VIN" class="text-danger small"></span>
+						</div>
+					</div>
+
+					<div class="d-flex justify-content-end gap-2 mt-4">
+						<a asp-action="Index" class="btn btn-outline-secondary">Отмена</a>
+						<button type="submit" class="btn btn-success fw-bold px-4">Сохранить авто</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+@section Scripts {
+	<script>
+		const carModels = {
+			"BMW": ["3 Series", "5 Series", "7 Series", "X1", "X3", "X5", "X6", "X7", "M3", "M5"],
+			"Audi": ["A3", "A4", "A6", "A8", "Q3", "Q5", "Q7", "Q8", "TT", "RS6"],
+			"Mercedes-Benz": ["A-Class", "C-Class", "E-Class", "S-Class", "GLA", "GLC", "GLE", "GLS", "G-Class", "AMG GT"],
+			"Toyota": ["Camry", "Corolla", "RAV4", "Land Cruiser", "Prado", "Highlander", "Hilux", "Yaris", "C-HR", "Supra"],
+			"Volkswagen": ["Polo", "Golf", "Passat", "Tiguan", "Touareg", "Jetta", "Arteon", "Caravelle", "Multivan", "Taos"],
+			"Hyundai": ["Solaris", "Elantra", "Sonata", "Creta", "Tucson", "Santa Fe", "Palisade", "I30", "Genesis G80", "Staria"],
+			"KIA": ["Rio", "Ceed", "Cerato", "K5", "Optima", "Sportage", "Sorento", "Telluride", "Soul", "Stinger"],
+			"LADA": ["Vesta", "Granta", "Niva Legend", "Niva Travel", "XRAY", "Largus", "Priora", "Kalina", "2107", "2114"],
+			"Nissan": ["Qashqai", "X-Trail", "Juke", "Murano", "Terrano", "Almera", "Teana", "Patrol", "Navara", "GT-R"],
+			"Ford": ["Focus", "Mondeo", "Fiesta", "Kuga", "Explorer", "EcoSport", "Mustang", "Ranger", "Transit", "Fusion"]
+		};
+
+		function updateModels(selectedModel = null) {
+			const brand = document.getElementById("brandSelect").value;
+			const modelSelect = document.getElementById("modelSelect");
+			modelSelect.innerHTML = '<option value="">-- Выберите модель --</option>';
+
+			if (brand && carModels[brand]) {
+				carModels[brand].forEach(model => {
+					const option = document.createElement("option");
+					option.value = model;
+					option.text = model;
+					if (selectedModel && model === selectedModel) {
+						option.selected = true;
+					}
+					modelSelect.appendChild(option);
+				});
+			}
+		}
+
+		function combineLicensePlate() {
+			const number = document.getElementById("licenseNumber").value.trim().toUpperCase();
+			const region = document.getElementById("regionSelect").value;
+			document.getElementById("fullLicensePlate").value = `${number} ${region}`;
+		}
+
+		// Восстановление выбранной модели при перезагрузке страницы с ошибкой валидации
+		document.addEventListener("DOMContentLoaded", function() {
+			const currentBrand = "@Model?.Make";
+			const currentModel = "@Model?.Model";
+			if (currentBrand) {
+				document.getElementById("brandSelect").value = currentBrand;
+				updateModels(currentModel);
+			}
+		});
+	</script>
+}

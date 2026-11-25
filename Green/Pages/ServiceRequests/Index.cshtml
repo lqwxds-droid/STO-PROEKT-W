@@ -1,0 +1,137 @@
+@page
+@model Green.Pages.ServiceRequests.IndexModel
+@using Green.Infrastructure
+@{
+	ViewData["Title"] = "Заявки на сервис";
+}
+
+<div class="page-heading">
+	<div><span class="eyebrow">ГРИН АВТО / ЗАПИСИ</span><h1>Заказы и заказ-наряды</h1><p>Заявки клиента, назначенные мастера и ход выполнения обслуживания.</p></div>
+	@if (User.IsInRole("Client"))
+	{
+		<a class="btn btn-success btn-lg" href="@Url.Page("./Create")"><i class="bi bi-plus-lg me-2"></i>Новая заявка</a>
+	}
+	else if (User.IsInRole("Admin"))
+	{
+		<a class="btn btn-success btn-lg" href="@Url.Action("Index", "Admin")"><i class="bi bi-kanban me-2"></i>Панель управления заказами</a>
+	}
+	else if (User.IsInRole("Employee"))
+	{
+		<a class="btn btn-success btn-lg" href="@Url.Action("Index", "Employee")"><i class="bi bi-kanban me-2"></i>Рабочее место</a>
+	}
+</div>
+
+<nav aria-label="Page navigation" class="mt-4">
+	<ul class="pagination justify-content-center">
+		@if (Model.ServiceRequests.HasPreviousPage)
+		{
+			<li class="page-item">
+				<a class="page-link" href="@Url.Page("./Index", new { PageIndex = Model.ServiceRequests.PageIndex - 1, Search = Model.Search, StatusFilter = Model.StatusFilter.HasValue ? (int?)Model.StatusFilter.Value : null, VehicleId = Model.VehicleId })">Пред.</a>
+			</li>
+		}
+		else
+		{
+			<li class="page-item disabled"><span class="page-link">Пред.</span></li>
+		}
+
+		@for (var i = 1; i <= Model.ServiceRequests.TotalPages; i++)
+		{
+			<li class="@(i == Model.ServiceRequests.PageIndex ? "page-item active" : "page-item")">
+				<a class="page-link" href="@Url.Page("./Index", new { PageIndex = i, Search = Model.Search, StatusFilter = Model.StatusFilter.HasValue ? (int?)Model.StatusFilter.Value : null, VehicleId = Model.VehicleId })">@i</a>
+			</li>
+		}
+
+		@if (Model.ServiceRequests.HasNextPage)
+		{
+			<li class="page-item">
+				<a class="page-link" href="@Url.Page("./Index", new { PageIndex = Model.ServiceRequests.PageIndex + 1, Search = Model.Search, StatusFilter = Model.StatusFilter.HasValue ? (int?)Model.StatusFilter.Value : null, VehicleId = Model.VehicleId })">След.</a>
+			</li>
+		}
+		else
+		{
+			<li class="page-item disabled"><span class="page-link">След.</span></li>
+		}
+	</ul>
+</nav>
+
+<form method="get" class="surface request-filters p-3 mb-4">
+	<div class="row g-3">
+		<div class="col-12 col-md-5">
+			<input class="form-control" name="Search" value="@Model.Search" placeholder="Поиск: клиент, авто, описание" />
+		</div>
+		<div class="col-12 col-md-4">
+			<select class="form-select" name="StatusFilter">
+				<option value="">Все статусы</option>
+				@foreach(var s in Enum.GetValues(typeof(Green.Models.RequestStatus)))
+				{
+					@if (Model.StatusFilter == (Green.Models.RequestStatus?)s)
+					{
+						<option value="@((int)s)" selected>@(((Green.Models.RequestStatus)s).GetRussianName())</option>
+					}
+					else
+					{
+						<option value="@((int)s)">@(((Green.Models.RequestStatus)s).GetRussianName())</option>
+					}
+				}
+			</select>
+		</div>
+		<div class="col-12 col-md-3">
+			<button type="submit" class="btn btn-outline-success w-100">Фильтровать</button>
+		</div>
+	</div>
+</form>
+
+<div class="row g-3">
+@if (!Model.ServiceRequests.Any())
+{
+	<div class="col-12">
+		<div class="surface p-5 text-center">
+			<i class="bi bi-clipboard2-x display-5 text-muted"></i>
+			<h3 class="mt-3">Заявок пока нет</h3>
+			<p class="text-muted mb-0">Измените фильтры или оформите новую запись на обслуживание.</p>
+		</div>
+	</div>
+}
+@foreach(var r in Model.ServiceRequests)
+{
+	var description = r.Description ?? string.Empty;
+	var shortDescription = description.Length > 120 ? description.Substring(0, 120) + "..." : description;
+	<div class="col-12 col-md-6 col-lg-4">
+		<div class="request-card h-100">
+			<div class="card-body">
+				<div class="d-flex justify-content-between align-items-start mb-2">
+					<div>
+						<div class="h5 mb-1">№@r.Id — @(r.Client?.UserName ?? "—")</div>
+						<div class="text-muted small">@((r.Vehicle != null) ? ($"{r.Vehicle.Make} {r.Vehicle.Model} • {r.Vehicle.LicensePlate}") : "—")</div>
+					</div>
+					<div>
+						<partial name="_StatusBadge" model="r.Status" />
+					</div>
+				</div>
+
+				<p class="request-description mb-2">@shortDescription</p>
+				<div class="small text-muted">Мастер: @(r.AssignedEmployee == null ? "не назначен" : string.IsNullOrWhiteSpace(r.AssignedEmployee.FullName) ? r.AssignedEmployee.Email ?? r.AssignedEmployee.UserName : r.AssignedEmployee.FullName)</div>
+
+				<div class="d-flex justify-content-between align-items-center mt-3">
+					<div>
+						<div class="price-large">@r.TotalCost.ToString("N0") ₽</div>
+						<div class="text-muted small">@r.ScheduledDate.ToLocalTime().ToString("g")</div>
+					</div>
+					<div class="request-actions">
+						<a class="btn btn-ghost request-action-link" href="@Url.Page("./Details", new { id = r.Id })" title="Открыть"><i class="bi bi-eye"></i></a>
+						@if (User.IsInRole("Admin"))
+						{
+							<a class="btn btn-ghost request-action-link" href="@Url.Page("./Edit", new { id = r.Id })" title="Изменить"><i class="bi bi-pencil"></i></a>
+							<a class="btn btn-ghost text-danger request-action-link" href="@Url.Page("./Delete", new { id = r.Id })" title="Удалить"><i class="bi bi-trash"></i></a>
+						}
+						@if (User.IsInRole("Employee"))
+						{
+							<a class="btn btn-ghost request-action-link" href="@Url.Action("ManageOrder", "Employee", new { id = r.Id })" title="Открыть заказ-наряд"><i class="bi bi-tools"></i></a>
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+</div>

@@ -1,0 +1,87 @@
+<div class="quick-vehicle-fields">
+	<div class="quick-vehicle-field">
+		<label class="form-label" for="quickBrand">Марка автомобиля</label>
+		<select id="quickBrand" name="Make" class="form-select" required>
+			<option value="">Выберите марку</option>
+			<option value="BMW">BMW</option>
+			<option value="Audi">Audi</option>
+			<option value="Mercedes-Benz">Mercedes-Benz</option>
+			<option value="Toyota">Toyota</option>
+			<option value="Volkswagen">Volkswagen</option>
+			<option value="Hyundai">Hyundai</option>
+			<option value="KIA">KIA</option>
+			<option value="LADA">LADA (ВАЗ)</option>
+			<option value="Nissan">Nissan</option>
+			<option value="Ford">Ford</option>
+		</select>
+	</div>
+	<div class="quick-vehicle-field">
+		<label class="form-label" for="quickModel">Модель</label>
+		<select id="quickModel" name="Model" class="form-select" required disabled>
+			<option value="">Сначала выберите марку</option>
+		</select>
+	</div>
+	<div class="quick-vehicle-field">
+		<label class="form-label" for="quickYear">Год выпуска</label>
+		<input id="quickYear" name="Year" class="form-control" type="number" min="1950" max="@DateTime.Now.Year" value="@DateTime.Now.Year" required />
+	</div>
+	<div class="quick-vehicle-field quick-vehicle-plate">
+		<label class="form-label" for="quickPlateSeries">Государственный номер</label>
+		<div class="quick-plate-row">
+			<input id="quickPlateSeries" class="form-control text-uppercase" maxlength="6" placeholder="А777АА" required />
+			<select id="quickPlateRegion" class="form-select" required>
+				<option value="">Регион</option>
+				@for (var region = 1; region <= 95; region++)
+				{
+					var code = region.ToString("00");
+					<option value="@code">@code</option>
+				}
+			</select>
+		</div>
+		<input id="quickLicensePlate" type="hidden" name="LicensePlate" />
+		<small class="form-hint">Серия номера и код региона будут объединены автоматически.</small>
+	</div>
+	<div class="quick-vehicle-field">
+		<label class="form-label" for="quickVin">VIN-код <span>(необязательно)</span></label>
+		<input id="quickVin" name="VIN" class="form-control text-uppercase" maxlength="17" placeholder="17 символов VIN" />
+	</div>
+</div>
+
+<script>
+(() => {
+	const brands = {
+		BMW: ['3 Series', '5 Series', '7 Series', 'X1', 'X3', 'X5', 'X6', 'X7', 'M3', 'M5'],
+		Audi: ['A3', 'A4', 'A6', 'A8', 'Q3', 'Q5', 'Q7', 'Q8', 'TT', 'RS6'],
+		'Mercedes-Benz': ['A-Class', 'C-Class', 'E-Class', 'S-Class', 'GLA', 'GLC', 'GLE', 'GLS', 'G-Class', 'AMG GT'],
+		Toyota: ['Camry', 'Corolla', 'RAV4', 'Land Cruiser', 'Prado', 'Highlander', 'Hilux', 'Yaris', 'C-HR', 'Supra'],
+		Volkswagen: ['Polo', 'Golf', 'Passat', 'Tiguan', 'Touareg', 'Jetta', 'Arteon', 'Caravelle', 'Multivan', 'Taos'],
+		Hyundai: ['Solaris', 'Elantra', 'Sonata', 'Creta', 'Tucson', 'Santa Fe', 'Palisade', 'I30', 'Genesis G80', 'Staria'],
+		KIA: ['Rio', 'Ceed', 'Cerato', 'K5', 'Optima', 'Sportage', 'Sorento', 'Telluride', 'Soul', 'Stinger'],
+		LADA: ['Vesta', 'Granta', 'Niva Legend', 'Niva Travel', 'XRAY', 'Largus', 'Priora', 'Kalina', '2107', '2114'],
+		Nissan: ['Qashqai', 'X-Trail', 'Juke', 'Murano', 'Terrano', 'Almera', 'Teana', 'Patrol', 'Navara', 'GT-R'],
+		Ford: ['Focus', 'Mondeo', 'Fiesta', 'Kuga', 'Explorer', 'EcoSport', 'Mustang', 'Ranger', 'Transit', 'Fusion']
+	};
+
+	const brand = document.getElementById('quickBrand');
+	const model = document.getElementById('quickModel');
+	const plate = document.getElementById('quickPlateSeries');
+	const region = document.getElementById('quickPlateRegion');
+	const fullPlate = document.getElementById('quickLicensePlate');
+	const form = document.getElementById('quickVehicleForm');
+
+	brand?.addEventListener('change', () => {
+		model.innerHTML = '<option value="">Выберите модель</option>';
+		model.disabled = !brand.value;
+		(brands[brand.value] || []).forEach(name => {
+			const option = document.createElement('option');
+			option.value = name;
+			option.textContent = name;
+			model.appendChild(option);
+		});
+	});
+
+	form?.addEventListener('submit', () => {
+		fullPlate.value = `${plate.value.trim().toUpperCase()} ${region.value}`.trim();
+	});
+})();
+</script>

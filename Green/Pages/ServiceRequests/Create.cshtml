@@ -1,0 +1,147 @@
+@page
+@model Green.Pages.ServiceRequests.CreateModel
+@{
+	ViewData["Title"] = "Создать заявку";
+}
+<div class="page-heading"><div><span class="eyebrow">ГРИН АВТО / ЗАПИСЬ НА СЕРВИС</span><h1>Новая заявка</h1><p>Выберите автомобиль, дату визита и необходимые работы.</p></div></div>
+<div class="card card-ghost">
+	<div class="card-body">
+		<div class="d-flex justify-content-between align-items-center mb-3">
+			<h2 class="mb-0">Данные заявки</h2>
+			<a class="btn btn-outline-secondary" href="@Url.Page("./Index")">Назад</a>
+		</div>
+
+		<form method="post">
+			@if (!ViewData.ModelState.IsValid)
+			{
+				<div asp-validation-summary="All" class="validation-summary" role="alert"></div>
+			}
+			<div class="row g-3">
+				<div class="col-md-8">
+					<div class="row g-3 mb-3">
+						<div class="col-md-6">
+							<label asp-for="AppointmentDate" class="form-label">Дата визита</label>
+							<input asp-for="AppointmentDate" type="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+							<span asp-validation-for="AppointmentDate" class="text-danger"></span>
+						</div>
+						<div class="col-md-6">
+							<label asp-for="AppointmentTime" class="form-label">Время визита</label>
+							<select asp-for="AppointmentTime" class="form-select" required>
+								<option value="">-- Выберите время --</option>
+								@for (var hour = 10; hour < 18; hour++)
+								{
+									foreach (var minute in new[] { 0, 30 })
+									{
+										<option value="@($"{hour:00}:{minute:00}")">@($"{hour:00}:{minute:00}")</option>
+									}
+								}
+							</select>
+							<span asp-validation-for="AppointmentTime" class="text-danger"></span>
+						</div>
+					</div>
+					<div class="mb-3">
+						<label asp-for="ServiceRequest.Description" class="form-label">Описание</label>
+						<textarea asp-for="ServiceRequest.Description" class="form-control" rows="4"></textarea>
+					</div>
+
+					<div class="mb-3">
+						<label asp-for="ServiceRequest.VehicleId" class="form-label">Автомобиль</label>
+						@if (!Model.Vehicles.Any())
+						{
+							<div class="alert alert-warning" role="alert">
+								В гараже пока нет автомобиля. <a asp-controller="Client" asp-action="AddVehicle" class="alert-link">Добавить автомобиль</a>
+							</div>
+						}
+						<select asp-for="ServiceRequest.VehicleId" class="form-select" asp-items="@(new Microsoft.AspNetCore.Mvc.Rendering.SelectList(Model.Vehicles, "Id", "DisplayName"))">
+							<option value="">-- Выберите автомобиль --</option>
+						</select>
+						<span asp-validation-for="ServiceRequest.VehicleId" class="text-danger"></span>
+					</div>
+				</div>
+
+				<div class="col-md-4">
+					<div class="p-3 service-card">
+						<h6>Итог</h6>
+						<div class="d-flex justify-content-between align-items-center mb-2">
+							<div class="text-muted">Выбрано услуг</div>
+							<div id="countSelected" class="fw-bold">0</div>
+						</div>
+						<div class="d-flex justify-content-between align-items-center mb-2">
+							<div class="text-muted">Итого</div>
+							<div id="totalPrice" class="price-large">0 ₽</div>
+						</div>
+						<div class="mt-2">
+							<h6 class="small text-muted">Выбранные работы</h6>
+							<ul id="selectedList" class="list-unstyled small mb-0"></ul>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<hr />
+
+			<h5 class="mt-3 mb-2">Услуги</h5>
+			<div class="row g-2">
+				@if (!Model.AvailableServices.Any())
+				{
+					<div class="col-12"><div class="booking-notice mb-0" role="status">Сейчас нет доступных услуг для записи. Попробуйте позже.</div></div>
+				}
+				@foreach (var s in Model.AvailableServices)
+				{
+					<div class="col-12 col-md-6">
+						<label class="d-block service-card">
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" name="SelectedServiceIds" value="@s.Id" id="srv_@s.Id" data-price="@s.Price" data-name="@s.Name" checked="@(Model.SelectedServiceIds.Contains(s.Id))" />
+								<span class="service-title ms-2">@s.Name</span>
+							</div>
+							<div class="text-muted small mt-1">@s.Description</div>
+							<div class="service-price mt-2">@s.Price.ToString("N0") ₽</div>
+						</label>
+					</div>
+				}
+			</div>
+
+			<div class="d-flex justify-content-end mt-4">
+				<button type="submit" class="btn btn-primary btn-lg">Создать заявку</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<script>
+	(function(){
+		function formatPrice(v){ return new Intl.NumberFormat('ru-RU', {maximumFractionDigits:0}).format(v) + ' ₽'; }
+		const checkboxes = document.querySelectorAll('input[name="SelectedServiceIds"]');
+		const total = document.getElementById('totalPrice');
+		const count = document.getElementById('countSelected');
+		function recalc(){
+			let sum = 0; let cnt = 0;
+			const selected = [];
+			checkboxes.forEach(cb => { if(cb.checked){ const p = cb.getAttribute('data-price'); const n = cb.getAttribute('data-name'); if(p) sum += parseFloat(p); cnt++; selected.push({ name: n, price: parseFloat(p) || 0 }); }});
+			total.innerText = formatPrice(sum || 0);
+			count.innerText = cnt;
+
+			// render list
+			const list = document.getElementById('selectedList');
+			if(list){
+				list.innerHTML = '';
+				if(selected.length === 0){
+					const li = document.createElement('li'); li.className = 'text-muted'; li.innerText = 'Работы из каталога не выбраны.'; list.appendChild(li);
+				} else {
+					selected.forEach(s => {
+						const li = document.createElement('li');
+						const name = document.createElement('span');
+						name.textContent = s.name;
+						const price = document.createElement('span');
+						price.className = 'float-end text-success';
+						price.textContent = formatPrice(s.price);
+						li.append(name, price);
+						list.appendChild(li);
+					});
+				}
+			}
+		}
+		checkboxes.forEach(cb => cb.addEventListener('change', recalc));
+		recalc();
+	})();
+</script>

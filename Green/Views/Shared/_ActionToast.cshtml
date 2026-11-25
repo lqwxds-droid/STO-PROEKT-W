@@ -1,0 +1,14 @@
+@{
+	var successMessage = TempData["Success"] as string;
+	var errorMessage = TempData["Error"] as string;
+	var message = successMessage ?? errorMessage;
+	var isError = successMessage == null && errorMessage != null;
+}
+@if (!string.IsNullOrWhiteSpace(message))
+{
+	<div class="action-toast @(isError ? "action-toast-error" : "action-toast-success")" role="status" aria-live="polite">
+		<i class="bi @(isError ? "bi-exclamation-circle" : "bi-check-circle")"></i>
+		<span>@message</span>
+		<button type="button" class="action-toast-close" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+	</div>
+}

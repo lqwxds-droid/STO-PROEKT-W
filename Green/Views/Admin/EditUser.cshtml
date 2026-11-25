@@ -1,0 +1,74 @@
+﻿@model Green.ViewModels.EditUserViewModel
+
+@{
+    ViewData["Title"] = "Редактирование пользователя";
+}
+
+<div class="page-heading" data-aos="fade-right">
+    <div>
+        <span class="eyebrow">ADMIN / USERS</span>
+        <h1>Редактирование пользователя</h1>
+        <p>Обновите контактные данные и роль сотрудника.</p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6" data-aos="fade-up" data-aos-delay="100">
+        <div class="card shadow-sm mt-3">
+            <div class="card-body">
+                <h3 class="card-title mb-4">Данные пользователя</h3>
+
+                <form asp-action="EditUser" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3" data-aos="fade-up" data-aos-delay="150">
+                        <label asp-for="FullName" class="form-label">Полное имя</label>
+                        <input asp-for="FullName" class="form-control" placeholder="Введите полное имя" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3" data-aos="fade-up" data-aos-delay="200">
+                        <label asp-for="Email" class="form-label">Email</label>
+                        <input asp-for="Email" class="form-control" placeholder="example@email.com" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3" data-aos="fade-up" data-aos-delay="250">
+                        <label asp-for="PhoneNumber" class="form-label">Номер телефона</label>
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="+7 (999) 999-99-99" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4" data-aos="fade-up" data-aos-delay="300">
+                        <label asp-for="Role" class="form-label">Роль в системе</label>
+                        <select asp-for="Role" class="form-select">
+                            <option value="">-- Выберите роль --</option>
+                            <option value="Admin">Администратор</option>
+                            <option value="Employee">Сотрудник</option>
+                            <option value="Client">Клиент</option>
+                        </select>
+                        <span asp-validation-for="Role" class="text-danger"></span>
+                        <small class="form-text text-muted d-block mt-2">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Администратор</strong> - полный доступ ко всем функциям
+                            <br />
+                            <strong>Сотрудник</strong> - управление заказами и услугами
+                            <br />
+                            <strong>Клиент</strong> - запись на обслуживание и просмотр заказов
+                        </small>
+                    </div>
+
+                    <div class="d-flex justify-content-between gap-3" data-aos="fade-up" data-aos-delay="350">
+                        <a asp-action="Index" class="btn btn-outline-secondary flex-grow-1">
+                            <i class="bi bi-x-lg"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            <i class="bi bi-check-lg"></i> Сохранить изменения
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

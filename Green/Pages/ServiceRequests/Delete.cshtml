@@ -1,0 +1,21 @@
+@page "{id:int}"
+@model Green.Pages.ServiceRequests.DeleteModel
+@{
+	ViewData["Title"] = "Удалить заявку";
+}
+
+<div class="page-heading"><div><span class="eyebrow">ГРИН АВТО / ЗАПИСИ</span><h1>Удалить заявку #@Model.ServiceRequest?.Id</h1><p>Это действие нельзя отменить.</p></div></div>
+
+<div class="card bg-dark border-secondary mb-3">
+	<div class="card-body text-light">
+		<p>Вы уверены, что хотите удалить заявку?</p>
+		<p><strong>Клиент:</strong> @Model.ServiceRequest?.Client?.UserName</p>
+		<p><strong>Автомобиль:</strong> @Model.ServiceRequest?.Vehicle?.Make @Model.ServiceRequest?.Vehicle?.Model</p>
+	</div>
+</div>
+
+<form method="post">
+	@Html.AntiForgeryToken()
+	<button type="submit" class="btn btn-danger">Удалить</button>
+	<a class="btn btn-secondary" href="@Url.Page("./Index")">Отмена</a>
+</form>

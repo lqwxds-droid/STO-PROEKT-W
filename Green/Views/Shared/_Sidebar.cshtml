@@ -1,0 +1,98 @@
+@using Microsoft.AspNetCore.Identity
+@using Green.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<aside id="mainSidebar" class="sidebar" aria-label="Основная навигация">
+	<!-- Навигация -->
+	<nav class="sidebar-nav">
+		@if (SignInManager.IsSignedIn(User))
+		{
+			<!-- Admin Section -->
+			@if (User.IsInRole("Admin"))
+			{
+				<div class="nav-section">
+				<div class="nav-section-label">Администрирование</div>
+					<a class="nav-link" asp-controller="Admin" asp-action="Index">
+						<i class="bi bi-sliders2"></i>
+						<span title="Панель администратора">Панель администратора</span>
+					</a>
+					<a class="nav-link" asp-controller="Services" asp-action="Index">
+						<i class="bi bi-wrench"></i>
+						<span title="Услуги и работы">Услуги и работы</span>
+					</a>
+				</div>
+			}
+
+			<!-- Employee Section -->
+			@if (User.IsInRole("Employee"))
+			{
+				<div class="nav-section">
+				<div class="nav-section-label">Работа</div>
+					<a class="nav-link" asp-controller="Employee" asp-action="Index">
+						<i class="bi bi-list-check"></i>
+						<span title="Мои задачи">Мои задачи</span>
+					</a>
+				</div>
+			}
+
+			<!-- Client Section -->
+			@if (User.IsInRole("Client"))
+			{
+				<div class="nav-section">
+				<div class="nav-section-label">Обслуживание</div>
+					<a class="nav-link" asp-controller="Client" asp-action="Book">
+						<i class="bi bi-calendar2-check"></i>
+						<span title="Записаться на обслуживание">Записаться на обслуживание</span>
+					</a>
+					<a class="nav-link" asp-controller="Client" asp-action="Index">
+						<i class="bi bi-clipboard2-check"></i>
+						<span title="Мои заказы">Мои заказы</span>
+					</a>
+				</div>
+			}
+
+			<!-- Requests Section for administrators -->
+			@if (User.IsInRole("Admin"))
+			{
+				<div class="nav-section">
+					<div class="nav-section-label">Заявки</div>
+					<a class="nav-link" asp-page="/ServiceRequests/Index">
+						<i class="bi bi-clipboard2-check"></i>
+						<span title="Заявки">Заявки</span>
+					</a>
+				</div>
+			}
+
+			<!-- Profile Section - at bottom -->
+			<div class="sidebar-bottom">
+				<div class="nav-section">
+					<div class="sidebar-profile">
+						<strong>@User.Identity?.Name</strong>
+						<small>@(User.IsInRole("Admin") ? "Администратор" : User.IsInRole("Employee") ? "Сотрудник" : "Клиент")</small>
+					</div>
+					<a class="nav-link" asp-controller="Account" asp-action="Profile">
+						<i class="bi bi-person-circle"></i>
+						<span title="Профиль">Профиль</span>
+					</a>
+				</div>
+			</div>
+		}
+		else
+		{
+			<!-- Not Logged In -->
+			<div class="sidebar-bottom sidebar-bottom-guest">
+				<div class="nav-section">
+					<a class="sidebar-auth-link" asp-controller="Account" asp-action="Login">
+						<i class="bi bi-box-arrow-in-right"></i>
+						<span title="Войти">Войти</span>
+					</a>
+					<a class="sidebar-auth-link" asp-controller="Account" asp-action="Register">
+						<i class="bi bi-person-plus"></i>
+						<span title="Зарегистрироваться">Зарегистрироваться</span>
+					</a>
+				</div>
+			</div>
+		}
+	</nav>
+</aside>

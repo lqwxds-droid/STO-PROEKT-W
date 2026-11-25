@@ -1,0 +1,77 @@
+@{
+	ViewData["Title"] = "Главная";
+}
+
+<main class="garage-home">
+	<section class="garage-hero" aria-labelledby="garageHeroTitle">
+		<div class="garage-hero-visual" aria-hidden="true">
+			<div class="garage-visual-grid"></div>
+			<div class="garage-visual-glow"></div>
+			<div class="garage-visual-ring garage-visual-ring-one"></div>
+			<div class="garage-visual-ring garage-visual-ring-two"></div>
+			<div class="garage-visual-car"><i class="bi bi-car-front-fill"></i></div>
+			<div class="garage-visual-floor"></div>
+			<div class="garage-visual-caption">GREEN AUTO <span>•</span> СЕРВИС И ЗАБОТА</div>
+		</div>
+
+		<div class="garage-hero-content">
+			<div class="garage-kicker"><span></span> АВТОСЕРВИС ПОЛНОГО ЦИКЛА</div>
+			<h1 id="garageHeroTitle">Ваш автомобиль.<br /><em>Наша забота.</em></h1>
+			<p class="garage-hero-description">Профессиональное обслуживание и ремонт без лишних хлопот. Запишитесь онлайн — остальное мы возьмём на себя.</p>
+
+			<div class="garage-hero-actions">
+				@if (User.Identity.IsAuthenticated)
+				{
+					if (User.IsInRole("Client"))
+					{
+						<a asp-controller="Client" asp-action="Book" class="btn btn-primary btn-lg garage-primary-action">
+							<i class="bi bi-calendar2-check"></i> Записаться на сервис
+						</a>
+					}
+					else if (User.IsInRole("Employee") || User.IsInRole("Admin"))
+					{
+						<a asp-controller="Client" asp-action="Book" class="btn btn-primary btn-lg garage-primary-action">
+							<i class="bi bi-calendar2-check"></i> Создать заказ
+						</a>
+					}
+					<a asp-controller="Services" asp-action="Index" class="btn btn-outline-primary btn-lg garage-secondary-action">
+						<i class="bi bi-arrow-up-right"></i> Наши услуги
+					</a>
+				}
+				else
+				{
+					<a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg garage-primary-action">
+						<i class="bi bi-calendar2-check"></i> Записаться онлайн
+					</a>
+					<a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-lg garage-secondary-action">
+						Войти <i class="bi bi-arrow-right"></i>
+					</a>
+				}
+			</div>
+
+			<div class="garage-hero-note">
+				<i class="bi bi-shield-check"></i>
+				<span>Понятная запись, внимательные мастера, честный подход</span>
+			</div>
+		</div>
+
+		<div class="garage-hero-index" aria-hidden="true"><span>01</span><i></i> GREEN AUTO</div>
+	</section>
+
+	<section class="garage-info-strip" aria-label="Информация об автосервисе">
+		<div class="garage-info-item">
+			<span class="garage-info-icon"><i class="bi bi-clock"></i></span>
+			<div><strong>Пн — Сб</strong><span>с 10:00 до 18:00</span></div>
+		</div>
+		<div class="garage-info-divider"></div>
+		<div class="garage-info-item">
+			<span class="garage-info-icon"><i class="bi bi-tools"></i></span>
+			<div><strong>Всё для автомобиля</strong><span>Диагностика, ТО и ремонт</span></div>
+		</div>
+		<div class="garage-info-divider"></div>
+		<div class="garage-info-item garage-info-promise">
+			<span class="garage-promise-dot"></span>
+			<div><strong>Запись онлайн</strong><span>Выберите удобное время</span></div>
+		</div>
+	</section>
+</main>

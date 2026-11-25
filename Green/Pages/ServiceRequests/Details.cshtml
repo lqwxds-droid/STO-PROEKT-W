@@ -1,0 +1,114 @@
+@page "{id:int}"
+@model Green.Pages.ServiceRequests.DetailsModel
+@{
+	ViewData["Title"] = "Детали заявки";
+}
+
+<div class="client-request-page">
+	<div class="client-request-heading">
+		<div>
+			<span class="eyebrow">ГРИН АВТО / ЗАПИСИ</span>
+			<h1>Заявка №@Model.ServiceRequest?.Id</h1>
+			<p>@Model.ServiceRequest?.Vehicle?.Make @Model.ServiceRequest?.Vehicle?.Model · @Model.ServiceRequest?.Vehicle?.LicensePlate</p>
+		</div>
+		<div class="client-request-status">
+			@switch(Model.ServiceRequest?.Status)
+			{
+				case Green.Models.RequestStatus.Planned:
+					<span class="status-badge status-planned">Запланировано</span>
+					break;
+				case Green.Models.RequestStatus.InProgress:
+					<span class="status-badge status-inprogress">В работе</span>
+					break;
+				case Green.Models.RequestStatus.Completed:
+					<span class="status-badge status-completed">Выполнено</span>
+					break;
+				case Green.Models.RequestStatus.Cancelled:
+					<span class="status-badge status-cancelled">Отменено</span>
+					break;
+				case Green.Models.RequestStatus.AwaitingApproval:
+					<span class="status-badge status-planned">Ожидает подтверждения</span>
+					break;
+			}
+		</div>
+	</div>
+
+	<div class="client-request-summary">
+		<div class="client-request-summary-item">
+			<span class="client-request-summary-icon"><i class="bi bi-car-front-fill"></i></span>
+			<div><span class="client-request-summary-label">Автомобиль</span><strong>@Model.ServiceRequest?.Vehicle?.Make @Model.ServiceRequest?.Vehicle?.Model</strong><small>@Model.ServiceRequest?.Vehicle?.LicensePlate</small></div>
+		</div>
+		<div class="client-request-summary-item">
+			<span class="client-request-summary-icon"><i class="bi bi-calendar3"></i></span>
+			<div><span class="client-request-summary-label">Дата записи</span><strong>@Model.ServiceRequest?.ScheduledDate.ToLocalTime().ToString("dd.MM.yyyy")</strong><small>@Model.ServiceRequest?.ScheduledDate.ToLocalTime().ToString("HH:mm")</small></div>
+		</div>
+		<div class="client-request-summary-item">
+			<span class="client-request-summary-icon"><i class="bi bi-person-gear"></i></span>
+			<div><span class="client-request-summary-label">Мастер</span><strong>@(Model.ServiceRequest?.AssignedEmployee == null ? "Ещё не назначен" : string.IsNullOrWhiteSpace(Model.ServiceRequest.AssignedEmployee.FullName) ? Model.ServiceRequest.AssignedEmployee.Email ?? Model.ServiceRequest.AssignedEmployee.UserName : Model.ServiceRequest.AssignedEmployee.FullName)</strong><small>Специалист по заказу</small></div>
+		</div>
+	</div>
+
+	<div class="client-request-content">
+		<div class="client-request-main">
+			<section class="client-request-card">
+				<div class="client-request-section-heading"><span class="client-request-section-icon"><i class="bi bi-card-text"></i></span><div><h2>Описание заявки</h2><p>Что нужно сделать с автомобилем</p></div></div>
+				<p class="client-request-description">@Model.ServiceRequest?.Description</p>
+			</section>
+
+			@if (!string.IsNullOrWhiteSpace(Model.ServiceRequest?.MasterComment))
+			{
+				<section class="client-request-card">
+					<div class="client-request-section-heading"><span class="client-request-section-icon"><i class="bi bi-chat-left-text"></i></span><div><h2>Комментарий мастера</h2><p>Дополнительная информация по заказу</p></div></div>
+					<p class="client-request-description">@Model.ServiceRequest.MasterComment</p>
+				</section>
+			}
+
+			<section class="client-request-card">
+				<div class="client-request-section-heading"><span class="client-request-section-icon"><i class="bi bi-list-check"></i></span><div><h2>Ход работ</h2><p>Статус выбранных услуг и дополнительных работ</p></div></div>
+				<div class="client-work-list">
+					@foreach (var service in Model.ServiceRequest?.Services ?? new List<Green.Models.Service>())
+					{
+						<div class="client-work-item">
+							<span class="client-work-state @(service.IsCompleted ? "is-completed" : "is-pending")"><i class="bi @(service.IsCompleted ? "bi-check-lg" : "bi-hourglass-split")"></i></span>
+							<div class="client-work-info"><strong>@service.Name</strong><small>@(service.IsCompleted ? "Услуга выполнена" : "Ожидает выполнения")</small></div>
+							<span class="client-work-price">@service.Price.ToString("N0") ₽</span>
+						</div>
+					}
+					@foreach (var task in Model.ServiceRequest?.Tasks ?? new List<Green.Models.ServiceTask>())
+					{
+						<div class="client-work-item">
+							<span class="client-work-state @(task.IsCompleted ? "is-completed" : task.IsApprovedByClient == false ? "is-rejected" : "is-pending")"><i class="bi @(task.IsCompleted ? "bi-check-lg" : task.IsApprovedByClient == false ? "bi-x-lg" : "bi-hourglass-split")"></i></span>
+							<div class="client-work-info"><strong>@task.Title</strong><small>@(task.IsApprovedByClient == true ? task.IsCompleted ? "Согласована и выполнена" : "Согласована · ожидает выполнения" : task.IsApprovedByClient == false ? "Отклонена клиентом" : "Ожидает согласования")</small></div>
+							<span class="client-work-price">@task.Cost.ToString("N0") ₽</span>
+						</div>
+					}
+					@if (!(Model.ServiceRequest?.Services.Any() ?? false) && !(Model.ServiceRequest?.Tasks.Any() ?? false))
+					{
+						<div class="client-work-empty">Работы пока не добавлены.</div>
+					}
+				</div>
+			</section>
+		</div>
+
+		<aside class="client-request-aside">
+			<div class="client-request-total-card">
+				<span class="client-request-total-icon"><i class="bi bi-receipt"></i></span>
+				<h2>Стоимость работ</h2>
+				<p>Итоговая сумма по заказу</p>
+				<div class="client-request-total-amount">@Model.ServiceRequest?.TotalCost.ToString("N0") <span>₽</span></div>
+				<div class="client-request-total-caption">Сумма указана за выбранные работы</div>
+			</div>
+			<div class="client-request-actions">
+				<a class="btn btn-outline-secondary" href="@Url.Page("./Index")"><i class="bi bi-arrow-left me-2"></i>К списку заявок</a>
+				@if (User.IsInRole("Admin") && Model.ServiceRequest?.Status is (Green.Models.RequestStatus.AwaitingApproval or Green.Models.RequestStatus.Planned))
+				{
+					<a class="btn btn-primary" href="@Url.Page("./Edit", new { id = Model.ServiceRequest?.Id })"><i class="bi bi-pencil me-2"></i>Редактировать</a>
+				}
+				else if (User.IsInRole("Employee"))
+				{
+					<a class="btn btn-primary" href="@Url.Action("ManageOrder", "Employee", new { id = Model.ServiceRequest?.Id })"><i class="bi bi-tools me-2"></i>Открыть заказ-наряд</a>
+				}
+			</div>
+		</aside>
+	</div>
+</div>

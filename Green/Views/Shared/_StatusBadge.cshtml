@@ -1,0 +1,25 @@
+@model Green.Models.RequestStatus
+
+@{
+	var cls = Model switch
+	{
+		Green.Models.RequestStatus.Planned => "status-badge status-planned",
+		Green.Models.RequestStatus.InProgress => "status-badge status-inprogress",
+		Green.Models.RequestStatus.Completed => "status-badge status-completed",
+		Green.Models.RequestStatus.Cancelled => "status-badge status-cancelled",
+		Green.Models.RequestStatus.AwaitingApproval => "status-badge status-planned",
+		_ => "status-badge status-planned"
+	};
+
+	var text = Model switch
+	{
+		Green.Models.RequestStatus.Planned => "Запланировано",
+		Green.Models.RequestStatus.InProgress => "В работе",
+		Green.Models.RequestStatus.Completed => "Выполнено",
+		Green.Models.RequestStatus.Cancelled => "Отменено",
+		Green.Models.RequestStatus.AwaitingApproval => "Ожидает подтверждения",
+		_ => Model.ToString()
+	};
+}
+
+<span class="@cls">@text</span>

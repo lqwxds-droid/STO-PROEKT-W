@@ -1,0 +1,265 @@
+@{
+	ViewData["Title"] = "Создать заказ";
+}
+
+<div class="page-heading">
+	<div>
+		<span class="eyebrow">НОВЫЙ ЗАКАЗ</span>
+		<h1>Записаться на обслуживание</h1>
+		<p>Выберите автомобиль, дату и необходимые услуги. Механик оценит состояние и предложит дополнительные работы.</p>
+	</div>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+	<div class="validation-summary" role="alert">
+		<div asp-validation-summary="ModelOnly" class="validation-summary-content"></div>
+	</div>
+}
+
+<div class="row g-3">
+	<div class="col-lg-8">
+		<form asp-controller="Client" asp-action="Book" method="post" class="card book-form-booking">
+			@Html.AntiForgeryToken()
+
+			<!-- ИНФОРМАЦИЯ О ЧАСАХ РАБОТЫ -->
+			<div class="card-body">
+				<div class="alert alert-success mb-0 working-hours-alert" role="alert">
+					<div class="row g-2 align-items-center">
+						<div class="col-auto">
+							<i class="bi bi-clock-fill" style="font-size: 1.5rem;"></i>
+						</div>
+						<div class="col">
+							<strong>Часы работы сервиса:</strong>
+							<ul class="mb-0 small">
+								<li><strong>Пн-Пт:</strong> 09:00 - 18:00</li>
+								<li><strong>Сб:</strong> 10:00 - 16:00</li>
+								<li><strong>Вс:</strong> Выходной</li>
+							</ul>
+						</div>
+					</div>
+				<div asp-validation-summary="All" class="text-danger small mt-3" role="alert"></div>
+				<div id="appointmentClientError" class="text-danger small mt-2" role="alert" aria-live="polite"></div>
+				</div>
+			</div>
+
+			<hr class="m-0" />
+
+			<!-- Выбор автомобиля -->
+			<div class="card-body">
+				<h5 class="mb-3"><i class="bi bi-car-front"></i> Шаг 1. Выберите автомобиль</h5>
+
+				@if (ViewBag.Vehicles == null || !((IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Vehicles).Any())
+				{
+					<div class="booking-notice mb-3" role="status">
+						<i class="bi bi-exclamation-triangle"></i>
+						Для записи сначала добавьте автомобиль в профиль.
+						<br />
+						<a asp-controller="Account" asp-action="Profile" class="alert-link">Перейти в профиль</a>
+					</div>
+				}
+				else
+				{
+					<select name="vehicleId" class="form-select mb-3" required>
+						<option value="">-- Выберите автомобиль --</option>
+						@if (ViewBag.Vehicles != null)
+						{
+							foreach (var item in (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Vehicles)
+							{
+								<option value="@item.Value" selected="@(ViewBag.SelectedVehicleId?.ToString() == item.Value)">
+									@item.Text
+								</option>
+							}
+						}
+					</select>
+				}
+			</div>
+
+			<hr class="m-0" />
+
+			<!-- Дата и время -->
+			<div class="card-body">
+				<h5 class="mb-3"><i class="bi bi-calendar-event"></i> Шаг 2. Дата и время</h5>
+
+				<div class="alert alert-info mb-3" role="alert">
+					<i class="bi bi-info-circle"></i>
+					<strong>Важно:</strong> Выбирайте время в рабочие часы сервиса. Если время занято или выходной, система уведомит вас об этом.
+				</div>
+
+				<div class="row g-3">
+					<div class="col-md-6">
+						<label class="form-label">Дата приёма *</label>
+						<input type="date" name="appointmentDate" class="form-control" required>
+						<small class="text-muted">Выберите удобную дату</small>
+					</div>
+					<div class="col-md-6">
+						<label class="form-label">Время приёма *</label>
+						<input type="time" name="appointmentTime" class="form-control" required>
+						<small class="text-muted">Примерное время прибытия</small>
+					</div>
+				</div>
+			</div>
+
+			<hr class="m-0" />
+
+			<!-- Услуги -->
+			<div class="card-body">
+				<h5 class="mb-3"><i class="bi bi-tools"></i> Шаг 3. Выберите услуги *</h5>
+				<small class="text-muted d-block mb-3">Отметьте нужные услуги. Окончательная стоимость будет определена мастером после осмотра.</small>
+
+				@if (ViewBag.Services != null)
+				{
+					<div class="service-selection-grid">
+						@foreach (var service in (IEnumerable<dynamic>)ViewBag.Services)
+						{
+							<div class="form-check">
+								<input type="checkbox" class="form-check-input" name="serviceIds" value="@service.Id" id="service-@service.Id" checked="@(ViewBag.SelectedServiceIds is List<int> selectedIds && selectedIds.Contains((int)service.Id))">
+								<label class="form-check-label" for="service-@service.Id">
+									<strong>@service.Name</strong>
+									<br />
+									<small class="text-muted">@service.Description</small>
+									<br />
+									<strong class="text-success">Цена после осмотра</strong>
+								</label>
+							</div>
+						}
+					</div>
+				}
+			</div>
+
+			<hr class="m-0" />
+
+			<!-- Примечания -->
+			<div class="card-body">
+				<h5 class="mb-3"><i class="bi bi-chat-dots"></i> Шаг 4. Примечания</h5>
+				<textarea name="notes" class="form-control" rows="4" placeholder="Опишите проблемы, симптомы или особые требования..."></textarea>
+				<small class="text-muted">Это поможет механику быстрее диагностировать проблему</small>
+			</div>
+
+			<div class="card-footer d-flex gap-2">
+				<button type="submit" class="btn btn-primary flex-grow-1">
+					<i class="bi bi-check-lg"></i> Создать заказ
+				</button>
+				<a asp-action="Index" class="btn btn-outline-secondary">Отмена</a>
+			</div>
+		</form>
+	</div>
+
+	<!-- Информационная панель -->
+	<div class="col-lg-4">
+		<div class="card bg-dark border-secondary">
+			<div class="card-body">
+				<h5 class="mb-3">Как это работает?</h5>
+				<div class="booking-steps">
+					<div class="booking-step">
+						<div class="booking-step-number">1</div>
+						<div>
+							<strong>Заполните форму</strong>
+							<p class="text-muted small mb-0">Выберите авто, дату и опишите проблему</p>
+						</div>
+					</div>
+					<div class="booking-step">
+						<div class="booking-step-number">2</div>
+						<div>
+							<strong>Подтверждение</strong>
+							<p class="text-muted small mb-0">Мы свяжемся и уточним детали</p>
+						</div>
+					</div>
+					<div class="booking-step">
+						<div class="booking-step-number">3</div>
+						<div>
+							<strong>Диагностика</strong>
+							<p class="text-muted small mb-0">Механик оценит состояние авто</p>
+						</div>
+					</div>
+					<div class="booking-step">
+						<div class="booking-step-number">4</div>
+						<div>
+							<strong>Согласование</strong>
+							<p class="text-muted small mb-0">Получите смету и приступим к работе</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card mt-3">
+			<div class="card-body">
+				<h6>💡 Совет</h6>
+				<p class="text-muted small">Чем подробнее вы опишете проблему, тем быстрее мы сможем помочь.</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const bookingForm = document.querySelector('form.book-form-booking');
+	if (!bookingForm) return;
+
+	const timeInput = bookingForm.querySelector('input[name="appointmentTime"]');
+	const dateInput = bookingForm.querySelector('input[name="appointmentDate"]');
+	const serviceCheckboxes = bookingForm.querySelectorAll('input[name="serviceIds"]');
+
+	// Валидация времени на клиенте
+	function validateAppointmentTime() {
+		const errorMessage = document.getElementById('appointmentClientError');
+		const date = dateInput?.value ? new Date(`${dateInput.value}T00:00:00`) : null;
+		const [hours, minutes] = timeInput?.value ? timeInput.value.split(':').map(Number) : [];
+		let message = '';
+
+		if (date && date.getDay() === 0) {
+			message = 'В воскресенье сервис не работает. Выберите день с понедельника по субботу.';
+		} else if (timeInput?.value && (hours < 10 || hours >= 18 || minutes % 30 !== 0)) {
+			message = 'Выберите время с 10:00 до 17:30 с шагом 30 минут.';
+		}
+
+		if (errorMessage) errorMessage.textContent = message;
+		dateInput?.classList.toggle('is-invalid', Boolean(date && date.getDay() === 0));
+		timeInput?.classList.toggle('is-invalid', Boolean(timeInput.value && message && (!date || date.getDay() !== 0)));
+		return !message;
+	}
+
+	if (timeInput) {
+		timeInput.addEventListener('change', validateAppointmentTime);
+		timeInput.addEventListener('blur', validateAppointmentTime);
+	}
+	if (dateInput) {
+		dateInput.addEventListener('change', validateAppointmentTime);
+	}
+
+	// Установка минимальной даты на сегодня
+	if (dateInput) {
+		const today = new Date().toISOString().split('T')[0];
+		dateInput.setAttribute('min', today);
+	}
+
+	// Валидация перед отправкой формы
+	bookingForm.addEventListener('submit', function(e) {
+		if (!validateAppointmentTime()) {
+			e.preventDefault();
+			return false;
+		}
+
+		if (!Array.from(serviceCheckboxes).some(checkbox => checkbox.checked)) {
+			alert('Пожалуйста, выберите хотя бы одну услугу');
+			e.preventDefault();
+			return false;
+		}
+	});
+
+	// Подсветка выбранных услуг
+	serviceCheckboxes.forEach(checkbox => {
+		const label = checkbox.closest('.form-check');
+		const updateSelectionStyle = () => {
+			label.classList.toggle('border', checkbox.checked);
+			label.classList.toggle('border-success', checkbox.checked);
+			label.classList.toggle('p-3', checkbox.checked);
+			label.classList.toggle('rounded', checkbox.checked);
+			label.classList.toggle('bg-dark', checkbox.checked);
+		};
+		checkbox.addEventListener('change', updateSelectionStyle);
+		updateSelectionStyle();
+	});
+});
+</script>

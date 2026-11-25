@@ -1,0 +1,161 @@
+﻿@model Green.Models.ServiceRequest
+
+@{
+    ViewData["Title"] = $"Заказ-наряд #{Model.Id}";
+
+    int progressPercent = Model.Status switch
+    {
+        Green.Models.RequestStatus.AwaitingApproval => 0,
+        Green.Models.RequestStatus.Planned => 25,
+        Green.Models.RequestStatus.InProgress => 65,
+        Green.Models.RequestStatus.Completed => 100,
+        Green.Models.RequestStatus.Cancelled => 0,
+        _ => 0
+    };
+}
+
+<div class="mb-4 d-flex justify-content-between align-items-start">
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm mb-3">← Назад к списку записей</a>
+        <h2 class="fw-bold mb-1">Заказ-наряд #@Model.Id</h2>
+        <p class="text-muted mb-0">Отслеживание статуса и чек-лист технического обслуживания</p>
+    </div>
+    <div class="text-end">
+        <partial name="_StatusBadge" model="Model.Status" />
+    </div>
+ </div>
+
+<div class="row g-4">
+    <!-- Основной столбец: прогресс и чек-лист -->
+    <div class="col-md-8">
+        <div class="card shadow-sm p-4 mb-4">
+            <h5 class="fw-bold mb-2">Этапы обслуживания</h5>
+            <p class="text-muted small mb-3">Отображается текущий этап заказа; полоса не является точным процентом готовности.</p>
+
+            @if (Model.Status == Green.Models.RequestStatus.Cancelled)
+            {
+                <div class="alert alert-danger mb-0">
+                    Данный заказ-наряд был отменен. Обратитесь к администратору для уточнения деталей.
+                </div>
+            }
+            else
+            {
+                <div class="progress progress-thin mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated progress-value-@progressPercent @(Model.Status == Green.Models.RequestStatus.Completed ? "bg-success" : "bg-warning")"
+                         role="progressbar"
+                         aria-valuenow="@progressPercent"
+                         aria-valuemin="0"
+                         aria-valuemax="100"></div>
+                </div>
+
+                <div class="row text-center text-muted small mt-2">
+                    <div class="col-4 @(progressPercent >= 25 ? "text-light fw-bold" : "")">
+                        1. Приём и запись
+                    </div>
+                    <div class="col-4 @(progressPercent >= 65 ? "text-warning fw-bold" : "")">
+                        2. Ремонт и диагностика
+                    </div>
+                    <div class="col-4 @(progressPercent == 100 ? "text-success fw-bold" : "")">
+                        3. Финальная проверка и выдача
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center">
+                 <h5 class="fw-bold mb-0">Чек-лист мастера</h5>
+                <small class="text-muted">Обновляется автомехаником онлайн</small>
+            </div>
+            <div class="card-body">
+                @if (!Model.Services.Any() && !Model.Tasks.Any())
+                {
+                    <p class="text-muted mb-0">Мастер ещё не добавил работы в заказ-наряд.</p>
+                }
+                else
+                {
+                    <div class="list-group">
+                        @foreach (var service in Model.Services)
+                        {
+                            <div class="list-group-item bg-transparent text-light border-secondary d-flex align-items-center justify-content-between">
+                                <span><i class="bi @(service.IsCompleted ? "bi-check-circle text-success" : "bi-circle text-muted") me-2"></i>@service.Name</span>
+                                <span>@(service.IsCompleted ? "Выполнено" : "Ожидает") · @(service.Price <= 0 ? "Цена после осмотра" : $"{service.Price:N0} ₽")</span>
+                            </div>
+                        }
+                        @foreach (var task in Model.Tasks)
+                        {
+                            <div class="list-group-item bg-transparent text-light border-secondary d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <span><i class="bi @(task.IsCompleted ? "bi-check-circle text-success" : "bi-circle text-muted") me-2"></i>@task.Title</span>
+                                <span>@(task.IsCompleted ? "Выполнено" : task.IsApprovedByClient == true ? "Согласовано" : task.IsApprovedByClient == false ? "Отклонено" : "Ожидает решения") · @task.Cost.ToString("N0") ₽</span>
+                                @if (task.IsApprovedByClient == null && Model.Status is Green.Models.RequestStatus.Planned or Green.Models.RequestStatus.InProgress)
+                                {
+                                    <div class="d-flex gap-2">
+                                        <form asp-action="ReviewAdditionalWork" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="taskId" value="@task.Id" />
+                                            <input type="hidden" name="approve" value="true" />
+                                            <button type="submit" class="btn btn-sm btn-success">Согласовать</button>
+                                        </form>
+                                        <form asp-action="ReviewAdditionalWork" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="taskId" value="@task.Id" />
+                                            <input type="hidden" name="approve" value="false" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Отклонить</button>
+                                        </form>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+
+                <div class="mt-4 p-3 bg-dark rounded border border-secondary">
+                     <h6 class="fw-bold text-light mb-1">Примечания мастера:</h6>
+                    <p class="text-muted mb-0 small">
+                        @(string.IsNullOrEmpty(Model.MasterComment) ? "Мастер пока не оставил дополнительных замечаний." : Model.MasterComment)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Боковая панель: краткая сводка -->
+    <div class="col-md-4">
+        <div class="card-ghost p-3 shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h6 class="mb-0 fw-bold">Краткая сводка</h6>
+                    <small class="text-muted">Информация по заказу</small>
+                </div>
+            </div>
+
+            <hr class="border-secondary" />
+
+            <div class="small text-muted">Автомобиль</div>
+            <div class="fw-bold text-light mb-2">@Model.Vehicle?.Make @Model.Vehicle?.Model</div>
+
+            <div class="small text-muted">Гос. номер / VIN</div>
+            <div class="mb-2">@(Model.Vehicle?.LicensePlate ?? Model.Vehicle?.VIN)</div>
+
+            <div class="small text-muted">Дата приёма</div>
+            <div class="mb-2">@Model.ScheduledDate.ToString("dd.MM.yyyy HH:mm")</div>
+
+            <div class="small text-muted">Мастер сервиса (ответственный)</div>
+            <div class="mb-2">@(Model.AssignedEmployee?.FullName ?? "Назначается...")</div>
+
+            <div class="small text-muted">Ориентировочная стоимость</div>
+            <div class="fs-4 fw-bold text-success mb-3">@(Model.TotalCost <= 0 ? "Цена после осмотра" : $"{Model.TotalCost:N0} ₽")</div>
+
+            <div class="d-grid gap-2">
+                @if (Model.Status is Green.Models.RequestStatus.AwaitingApproval or Green.Models.RequestStatus.Planned)
+                {
+                    <form asp-action="CancelRequest" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="requestId" value="@Model.Id" />
+                        <button type="submit" class="btn btn-outline-danger w-100">Отменить заявку</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

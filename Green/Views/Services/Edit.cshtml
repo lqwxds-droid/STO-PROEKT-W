@@ -1,0 +1,65 @@
+﻿@model Green.Models.ServiceCatalog
+
+@{
+    ViewData["Title"] = "Редактирование услуги";
+}
+
+<div class="page-heading"><div><span class="eyebrow">СПРАВОЧНИК / РЕДАКТИРОВАНИЕ</span><h1>Редактирование услуги</h1><p>Обновите название, стоимость и доступность работы.</p></div></div>
+<div class="service-form-shell">
+    <div class="card bg-dark text-light border-secondary shadow-lg">
+        <div class="card-header border-secondary d-flex justify-content-between align-items-center py-3">
+            <h4 class="mb-0 text-warning fw-bold">Данные услуги</h4>
+            <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm">← Назад к прейскуранту</a>
+        </div>
+        <div class="card-body p-4">
+            <form action="@Url.Action("Edit", new { id = Model.Id })" method="post">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <!-- Название услуги -->
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label fw-bold">Наименование работы / услуги <span class="text-danger">*</span></label>
+                    <input asp-for="Name" class="form-control bg-dark text-light border-secondary" required />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+
+                <!-- Стоимость -->
+                <div class="mb-3">
+                    <label asp-for="Price" class="form-label fw-bold">Стоимость работы <span class="text-danger">*</span></label>
+                    <div class="input-group input-group-lg">
+                        <input asp-for="Price" type="number" step="0.01" min="0" class="form-control bg-dark text-success fw-bold border-secondary" required />
+                        <span class="input-group-text bg-secondary text-light fw-bold">₽</span>
+                    </div>
+                    <span asp-validation-for="Price" class="text-danger small"></span>
+                </div>
+
+                <!-- Подробности / Описание (Подсказка ℹ️) -->
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label fw-bold">Описание для клиента</label>
+                    <textarea asp-for="Description" class="form-control bg-dark text-light border-secondary" rows="3"></textarea>
+                    <small class="text-muted">Отображается в подсказке при формировании заказа.</small>
+                    <span asp-validation-for="Description" class="text-danger small"></span>
+                </div>
+
+                <!-- Статус активности -->
+                <div class="form-check form-switch mb-4">
+                    <input asp-for="IsActive" class="form-check-input" type="checkbox" id="isActiveSwitch" />
+                    <label class="form-check-label fw-bold text-light" for="isActiveSwitch">
+                        Услуга активна (доступна в каталоге)
+                    </label>
+                </div>
+
+                <div class="d-flex gap-2 pt-2">
+                    <button type="submit" class="btn btn-warning btn-lg fw-bold flex-grow-1">Сохранить изменения</button>
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-lg">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

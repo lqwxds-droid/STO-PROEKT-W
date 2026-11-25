@@ -1,0 +1,81 @@
+@model Green.Models.ApplicationUser
+
+@{
+	ViewData["Title"] = "Мой профиль";
+	var vehicles = ViewBag.MyVehicles as IEnumerable<Green.Models.Vehicle> ?? Enumerable.Empty<Green.Models.Vehicle>();
+}
+
+<div class="page-heading">
+	<div><span class="eyebrow">ЛИЧНЫЙ КАБИНЕТ</span><h1>Мой профиль</h1><p>Ваши данные, автомобили и история обслуживания в одном месте.</p></div>
+	<a class="btn btn-success" href="@Url.Action("Book", "Client")">Новая запись <i class="bi bi-arrow-up-right"></i></a>
+</div>
+
+<div class="profile-grid">
+	<section class="profile-card surface">
+		<div class="profile-avatar"><i class="bi bi-person"></i></div>
+		<span class="eyebrow">КЛИЕНТ ГРИН АВТО</span>
+		<h2>@Model.FullName</h2>
+		<p>@Model.Email</p>
+		<div class="profile-detail"><span>Телефон</span><strong>@(Model.PhoneNumber ?? "Не указан")</strong></div>
+		<a asp-action="EditProfile" class="btn btn-outline-secondary w-100">Редактировать данные</a>
+	</section>
+	<section class="profile-garage surface">
+		<div class="profile-garage-icon"><i class="bi bi-car-front"></i></div>
+		<span class="eyebrow">ОБСЛУЖИВАНИЕ</span>
+		<h2>Всё необходимое в профиле</h2>
+		<p>Записи и история обслуживания доступны в левом меню. Выберите автомобиль ниже, чтобы записаться на обслуживание.</p>
+		<div class="profile-actions"><a class="btn btn-outline-secondary" asp-controller="Client" asp-action="Book">Записаться на обслуживание</a></div>
+	</section>
+</div>
+
+<section class="profile-vehicles surface">
+	<div class="profile-section-heading">
+		<div>
+			<span class="eyebrow">МОИ АВТОМОБИЛИ</span>
+			<h2>Автомобили для записи</h2>
+		</div>
+		<span class="profile-count">@vehicles.Count() авто</span>
+	</div>
+
+	<div class="profile-vehicle-list">
+		@foreach (var vehicle in vehicles)
+		{
+			<div class="profile-vehicle-card">
+				<div class="profile-vehicle-icon"><i class="bi bi-car-front-fill"></i></div>
+				<div class="profile-vehicle-main">
+					<strong>@vehicle.Make @vehicle.Model</strong>
+					<span>@vehicle.Year г.в. · @(string.IsNullOrWhiteSpace(vehicle.LicensePlate) ? "Номер не указан" : vehicle.LicensePlate)</span>
+					@if (!string.IsNullOrWhiteSpace(vehicle.VIN))
+					{
+						<small>VIN: @vehicle.VIN</small>
+					}
+				</div>
+				<div class="profile-vehicle-actions">
+					<a class="btn btn-sm btn-outline-success" asp-controller="Client" asp-action="Book" asp-route-vehicleId="@vehicle.Id">Записать</a>
+					<a class="btn btn-sm btn-outline-secondary" asp-controller="Client" asp-action="EditVehicle" asp-route-id="@vehicle.Id">Изменить</a>
+					<form asp-controller="Client" asp-action="DeleteVehicle" asp-route-id="@vehicle.Id" method="post" onsubmit="return confirm('Удалить этот автомобиль?');">
+						@Html.AntiForgeryToken()
+						<button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить"><i class="bi bi-trash"></i></button>
+					</form>
+				</div>
+			</div>
+		}
+	</div>
+
+	@if (!vehicles.Any())
+	{
+		<div class="profile-empty-vehicles">Добавьте первый автомобиль в форме ниже — после этого запись на обслуживание будет доступна из профиля.</div>
+	}
+
+	<div class="profile-add-vehicle">
+		<div>
+			<strong>Добавить автомобиль</strong>
+			<span>Заполните основные данные — VIN можно указать позже.</span>
+		</div>
+		<form id="quickVehicleForm" asp-controller="Client" asp-action="AddVehicle" method="post" class="profile-add-vehicle-form">
+			@Html.AntiForgeryToken()
+			<partial name="_VehicleQuickFields" />
+			<button type="submit" class="btn btn-success">Добавить</button>
+		</form>
+	</div>
+</section>

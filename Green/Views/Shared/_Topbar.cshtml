@@ -1,0 +1,47 @@
+@using Microsoft.AspNetCore.Identity
+@using Green.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<header class="topbar">
+	<div class="topbar-brand-area">
+		<!-- Mobile Sidebar Toggle -->
+		<button id="sidebarToggle" class="sidebar-toggle btn btn-sm btn-secondary" type="button" aria-label="Свернуть боковую панель" aria-controls="mainSidebar" aria-expanded="true">
+			<i class="bi bi-layout-sidebar-inset"></i>
+		</button>
+
+		<!-- Brand Logo -->
+		<a class="brand-link" asp-controller="Home" asp-action="Index">
+			<i class="bi bi-wrench-adjustable-circle"></i>
+			<span>Грин Авто</span>
+		</a>
+	</div>
+
+	<div class="topbar-user">
+		@if (SignInManager.IsSignedIn(User))
+		{
+			<div class="user-info">
+				<div class="user-avatar">
+					<i class="bi bi-person"></i>
+				</div>
+				<div>
+					<div class="user-name">@User.Identity?.Name</div>
+					<div class="user-role">@(User.IsInRole("Admin") ? "Администратор" : User.IsInRole("Employee") ? "Сотрудник" : "Клиент")</div>
+				</div>
+			</div>
+
+			<form class="topbar-logout" asp-controller="Account" asp-action="Logout" method="post">
+					<button type="submit" class="btn btn-sm btn-outline-primary" title="Выйти" aria-label="Выйти">
+					<i class="bi bi-box-arrow-right"></i>
+				</button>
+			</form>
+		}
+		else
+		{
+			<a class="btn btn-sm btn-primary" asp-controller="Account" asp-action="Login">
+				<i class="bi bi-box-arrow-in-right"></i>
+				<span>Войти</span>
+			</a>
+		}
+	</div>
+</header>

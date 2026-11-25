@@ -1,0 +1,108 @@
+@page "{id:int}"
+@model Green.Pages.ServiceRequests.EditModel
+@{
+	ViewData["Title"] = "Редактировать заявку";
+}
+
+<div class="page-heading">
+	<div>
+		<span class="eyebrow">ГРИН АВТО / ЗАКАЗЫ</span>
+		<h1>Заявка №@Model.ServiceRequest.Id</h1>
+		<p>Проверьте описание и состав работ, затем сохраните изменения.</p>
+	</div>
+	<a class="btn btn-outline-secondary" href="@Url.Page("./Index")"><i class="bi bi-arrow-left me-2"></i>К списку заявок</a>
+</div>
+
+<form method="post" class="request-edit-form">
+	@Html.AntiForgeryToken()
+	@if (ViewData.ModelState.Values.SelectMany(value => value.Errors).Any(error => !string.IsNullOrWhiteSpace(error.ErrorMessage)))
+	{
+		<div class="validation-summary" role="alert">
+			<ul class="mb-0">
+				@foreach (var error in ViewData.ModelState.Values.SelectMany(value => value.Errors).Where(error => !string.IsNullOrWhiteSpace(error.ErrorMessage)))
+				{
+					<li>@error.ErrorMessage</li>
+				}
+			</ul>
+		</div>
+	}
+
+	<div class="row g-4 align-items-start">
+		<div class="col-12 col-xl-8">
+			<section class="surface request-edit-section">
+				<div class="request-edit-section-heading">
+					<span class="request-edit-icon"><i class="bi bi-card-text"></i></span>
+					<div><h2>Описание заявки</h2><p>Сведения о проблеме и комментарий по выполнению.</p></div>
+				</div>
+				<div class="mb-4">
+					<label asp-for="Description" class="form-label">Описание работ</label>
+					<textarea asp-for="Description" class="form-control" rows="4" placeholder="Опишите причину обращения или необходимые работы"></textarea>
+				</div>
+				<div>
+					<label asp-for="MasterComment" class="form-label">Комментарий мастера — виден клиенту</label>
+					<textarea asp-for="MasterComment" class="form-control" rows="3" placeholder="Комментарий о работах для клиента"></textarea>
+				</div>
+			</section>
+
+			<section class="surface request-edit-section">
+				<div class="request-edit-section-heading">
+					<span class="request-edit-icon"><i class="bi bi-wrench-adjustable"></i></span>
+					<div><h2>Услуги и работы</h2><p>Отметьте услуги из каталога, которые должны входить в заявку.</p></div>
+				</div>
+				<div class="request-edit-services">
+					@foreach (var service in Model.AvailableServices)
+					{
+						var isSelected = Model.SelectedServiceIds.Contains(service.Id);
+						<label class="request-edit-service" for="service_@service.Id">
+							<input class="form-check-input" type="checkbox" name="SelectedServiceIds" value="@service.Id" id="service_@service.Id" @(isSelected ? "checked" : "") />
+							<span class="request-edit-service-copy">
+								<strong>@service.Name</strong>
+								<small>@service.Description</small>
+							</span>
+							<span class="request-edit-service-price">@service.Price.ToString("N0") ₽</span>
+						</label>
+					}
+					@if (!Model.AvailableServices.Any())
+					{
+						<p class="text-muted mb-0">В каталоге пока нет доступных услуг.</p>
+					}
+				</div>
+			</section>
+		</div>
+
+		<div class="col-12 col-xl-4">
+			<aside class="surface request-edit-summary">
+				<div class="request-edit-section-heading">
+					<span class="request-edit-icon"><i class="bi bi-clipboard-check"></i></span>
+					<div><h2>Состояние заявки</h2><p>Текущие данные до сохранения.</p></div>
+				</div>
+				<div class="mb-3">
+					<label asp-for="AssignedEmployeeId" class="form-label">Назначенный мастер</label>
+					@{
+						var selectedEmployeeId = ViewData.ModelState["AssignedEmployeeId"]?.AttemptedValue ?? Model.AssignedEmployeeId;
+					}
+					<select name="AssignedEmployeeId" id="AssignedEmployeeId" class="form-select">
+						<option value="" selected="@(string.IsNullOrEmpty(selectedEmployeeId))">Не назначен</option>
+						@foreach (var employee in Model.Employees)
+						{
+							<option value="@employee.Id" selected="@(employee.Id == selectedEmployeeId)">@(string.IsNullOrWhiteSpace(employee.FullName) ? employee.UserName : employee.FullName) — @employee.Email</option>
+						}
+					</select>
+				</div>
+				<div class="request-edit-status">
+					<span class="text-muted">Статус</span>
+					<partial name="_StatusBadge" model="Model.ServiceRequest.Status" />
+				</div>
+				<div class="request-edit-total">
+					<span class="text-muted">Текущая сумма</span>
+					<strong class="price-large">@Model.ServiceRequest.TotalCost.ToString("N0") ₽</strong>
+					<small class="text-muted">Услуг в заявке: @Model.ServiceRequest.Services.Count</small>
+				</div>
+				<div class="request-edit-actions">
+					<button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check2 me-2"></i>Сохранить изменения</button>
+					<a class="btn btn-outline-secondary" href="@Url.Page("./Index")">Отмена</a>
+				</div>
+			</aside>
+		</div>
+	</div>
+</form>

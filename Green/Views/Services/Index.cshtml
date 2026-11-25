@@ -1,0 +1,140 @@
+﻿@model IEnumerable<Green.Models.ServiceCatalog>
+
+@{
+    ViewData["Title"] = "Прейскурант услуг";
+    var canManage = ViewBag.CanManage is bool value && value;
+}
+
+<div class="page-heading">
+    <div><span class="eyebrow">ГРИН АВТО / СПРАВОЧНИК</span><h1>Услуги и работы</h1><p>Единый справочник работ, цен и доступности для записи.</p></div>
+    @if (canManage)
+    {
+        <a href="@Url.Action("Create")" class="btn btn-success fw-bold px-3">
+            <i class="bi bi-plus-lg"></i> Добавить услугу
+        </a>
+    }
+    else if (User.IsInRole("Client"))
+    {
+        <a href="@Url.Page("/ServiceRequests/Create")" class="btn btn-success fw-bold px-3">
+            <i class="bi bi-calendar-check"></i> Записаться на сервис
+        </a>
+    }
+</div>
+
+<!-- Панель поиска -->
+<div class="card bg-dark border-secondary shadow-sm p-3 mb-4">
+    <form method="get" action="@Url.Action("Index")" class="row g-2 align-items-center">
+        <div class="col-md-9 col-lg-10">
+            <div class="input-group">
+                <span class="input-group-text bg-secondary text-light border-secondary"><i class="bi bi-search"></i></span>
+                <input type="text" name="search" value="@ViewBag.CurrentSearch" class="form-control bg-dark text-light border-secondary" placeholder="Поиск работы по названию или описанию..." />
+            </div>
+        </div>
+        <div class="col-md-3 col-lg-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100">Найти</button>
+            @if (!string.IsNullOrEmpty(ViewBag.CurrentSearch as string))
+            {
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary" title="Сбросить"><i class="bi bi-arrow-counterclockwise"></i> Сбросить</a>
+            }
+        </div>
+    </form>
+</div>
+
+<!-- Таблица услуг -->
+<div class="card bg-dark text-light border-secondary shadow-lg">
+    <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 border-secondary">
+            <thead class="service-table-head small">
+                <tr>
+                    <th class="service-col-number">#</th>
+                    <th class="service-col-name">Название работы</th>
+                    <th class="service-col-description">Подробности / Подсказка</th>
+                    <th class="service-col-price">Стоимость</th>
+                    @if (canManage)
+                    {
+                        <th class="service-col-status">Статус</th>
+                        <th class="service-col-actions text-end">Действия</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="@(canManage ? 6 : 4)" class="text-center py-5 text-muted">
+                            <div class="fs-2 mb-2"><i class="bi bi-journal-text"></i></div>
+                            @if (canManage)
+                            {
+                                <span>Услуги не найдены. Добавьте первую работу или измените параметры поиска.</span>
+                            }
+                            else
+                            {
+                                <span>Подходящих активных услуг нет. Измените параметры поиска или попробуйте позже.</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    int index = 1;
+                    foreach (var item in Model)
+                    {
+                        <tr class="@(!item.IsActive ? "opacity-50" : "")">
+                            <td class="text-muted fw-bold">@(index++)</td>
+                            <td class="fw-bold text-light">
+                                @item.Name
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.Description))
+                                {
+                                    <span class="text-muted small">@item.Description</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic small">Описание отсутствует</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-success font-monospace fs-6 px-3 py-2">
+                                    @item.Price.ToString("N0") ₽
+                                </span>
+                            </td>
+                            @if (canManage)
+                            {
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success px-2 py-1">Активна</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary px-2 py-1">Отключена</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1">
+                                        <a href="@Url.Action("Edit", new { id = item.Id })" class="btn btn-sm btn-outline-warning" title="Редактировать">
+                                             <i class="bi bi-pencil"></i> Изменить
+                                        </a>
+                                        <form asp-action="ToggleStatus" asp-route-id="@item.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-outline-secondary" : "btn-outline-success")" title="@(item.IsActive ? "Деактивировать" : "Активировать")">
+                                                 <i class="bi @(item.IsActive ? "bi-pause" : "bi-play")"></i> @(item.IsActive ? "Отключить" : "Включить")
+                                            </button>
+                                        </form>
+                                        <form action="@Url.Action("Delete", new { id = item.Id })" method="post" class="d-inline" onsubmit="return confirm('Вы действительно хотите полностью удалить эту услугу из прайс-листа?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить">
+                                                <i class="bi bi-trash"></i> Удалить
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

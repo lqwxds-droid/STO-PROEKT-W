@@ -1,0 +1,36 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Green.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<!DOCTYPE html>
+<html lang="ru" data-bs-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Грин Авто</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="app-page">
+    <partial name="_Topbar" />
+
+    <div class="app-body">
+        <partial name="_Sidebar" />
+        <div class="sidebar-backdrop" aria-hidden="true"></div>
+        <main class="content-area">
+            <div class="content-inner">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <partial name="_ActionToast" />
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

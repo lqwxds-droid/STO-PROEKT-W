@@ -1,0 +1,55 @@
+﻿@model Green.ViewModels.CreateEmployeeViewModel
+
+@{
+    ViewData["Title"] = "Добавление сотрудника";
+}
+
+<div class="page-heading"><div><span class="eyebrow">ADMIN / TEAM</span><h1>Новый сотрудник</h1><p>Создайте учетную запись для сотрудника сервиса.</p></div></div>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm mt-3">
+            <div class="card-body">
+                <h3 class="card-title mb-4">Данные сотрудника</h3>
+
+                <form asp-action="CreateEmployee" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label"></label>
+                        <input asp-for="FullName" class="form-control" placeholder="Петров Алексей Сергеевич" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" placeholder="employee@green.com" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PhoneNumber" class="form-label"></label>
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="+7 (999) 111-22-33" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" type="password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                        <input asp-for="ConfirmPassword" class="form-control" type="password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Назад к списку</a>
+                        <button type="submit" class="btn btn-success">Создать сотрудника</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

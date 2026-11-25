@@ -1,0 +1,19 @@
+@{
+	ViewData["Title"] = "Очистка данных";
+}
+
+<div class="card bg-dark text-light border-danger shadow-lg">
+	<div class="card-header border-danger text-danger fw-bold">
+		⚠️ Внимание — операция очистки данных
+	</div>
+	<div class="card-body">
+		<p class="text-muted">Эта операция удалит все записи о заявках и автомобилях, а также связанные сервисные позиции. Действие необратимо. Убедитесь, что у вас есть резервная копия базы данных.</p>
+
+		<form method="post" asp-action="ClearDataConfirmed">
+			<div class="d-flex gap-2">
+				<button type="submit" class="btn btn-lg btn-danger">Удалить все автомобили и заявки</button>
+				<a class="btn btn-outline-light ms-2" asp-action="Index">Отмена</a>
+			</div>
+		</form>
+	</div>
+</div>

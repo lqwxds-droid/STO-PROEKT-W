@@ -1,0 +1,129 @@
+@model IEnumerable<Green.Models.ServiceRequest>
+@using Green.Infrastructure
+
+@{
+	ViewData["Title"] = "Мой кабинет";
+}
+
+<div class="page-heading">
+	<div>
+		<span class="eyebrow">РАБОЧИЙ ЛИСТ</span>
+		<h1>Мои назначенные заказы</h1>
+		<p>Автомобили и задачи, назначенные вам</p>
+	</div>
+</div>
+
+<!-- Статистика -->
+<div class="row g-3 mb-4">
+	<div class="col-md-3 col-sm-6">
+		<div class="card">
+			<div class="card-body text-center">
+				<i class="bi bi-file-earmark-check" style="font-size: 2rem; color: var(--color-primary); margin-bottom: 0.5rem;"></i>
+				<div class="text-muted small">Всего заказов</div>
+				<div class="fs-3 fw-bold text-primary">@Model.Count()</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-3 col-sm-6">
+		<div class="card">
+			<div class="card-body text-center">
+				<i class="bi bi-hammer" style="font-size: 2rem; color: var(--color-warning); margin-bottom: 0.5rem;"></i>
+				<div class="text-muted small">В работе</div>
+				<div class="fs-3 fw-bold text-warning">@Model.Count(r => r.Status == Green.Models.RequestStatus.InProgress)</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-3 col-sm-6">
+		<div class="card">
+			<div class="card-body text-center">
+				<i class="bi bi-check-circle" style="font-size: 2rem; color: var(--color-success); margin-bottom: 0.5rem;"></i>
+				<div class="text-muted small">Завершено</div>
+				<div class="fs-3 fw-bold text-success">@Model.Count(r => r.Status == Green.Models.RequestStatus.Completed)</div>
+			</div>
+		</div>
+	</div>
+	<div class="col-md-3 col-sm-6">
+		<div class="card">
+			<div class="card-body text-center">
+				<i class="bi bi-calendar-event" style="font-size: 2rem; color: var(--color-info); margin-bottom: 0.5rem;"></i>
+				<div class="text-muted small">Запланировано</div>
+				<div class="fs-3 fw-bold text-info">@Model.Count(r => r.Status == Green.Models.RequestStatus.Planned)</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Список заказов -->
+<div class="card">
+	<div class="card-header">
+		<h5 class="mb-0"><i class="bi bi-list-check"></i> Служебные заказы</h5>
+	</div>
+	<div class="card-body">
+		@if (!Model.Any())
+		{
+			<div class="text-center py-5 text-muted">
+				<i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.5;"></i>
+				<p class="mt-3">Назначенных заказов пока нет</p>
+				<p class="small mb-0">Когда администратор назначит заказ, он появится в этом списке. Если вы ожидаете назначение, уточните его у администратора.</p>
+			</div>
+		}
+		else
+		{
+			<div class="table-responsive">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Автомобиль</th>
+							<th>Клиент</th>
+							<th>Описание</th>
+							<th>Статус</th>
+							<th>Дата приёма</th>
+							<th>Действие</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var item in Model)
+						{
+							var statusColor = item.Status switch
+							{
+								Green.Models.RequestStatus.Planned => "info",
+								Green.Models.RequestStatus.InProgress => "warning",
+								Green.Models.RequestStatus.Completed => "success",
+								Green.Models.RequestStatus.Cancelled => "danger",
+								Green.Models.RequestStatus.AwaitingApproval => "warning",
+								_ => "secondary"
+							};
+
+							<tr>
+								<td>
+									<strong>@item.Vehicle?.Make @item.Vehicle?.Model</strong>
+									<br />
+									<small class="text-muted">@item.Vehicle?.LicensePlate</small>
+								</td>
+								<td>
+									@item.Client?.FullName
+									<br />
+									<small class="text-muted">@item.Client?.PhoneNumber</small>
+								</td>
+								<td>
+									<small>@item.Description</small>
+								</td>
+								<td>
+									<span class="badge badge-@statusColor">@item.Status.GetRussianName()</span>
+								</td>
+								<td>
+									<small>@item.ScheduledDate.ToString("dd.MM.yyyy HH:mm")</small>
+								</td>
+								<td>
+									<a asp-action="ManageOrder" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+										<i class="bi bi-tools"></i> Открыть заказ
+									</a>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</div>
+</div>
